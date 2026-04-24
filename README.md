@@ -7,7 +7,7 @@
   <img src="assets/lumina_bunny.png" width="300" alt="Lumina Guardian" />
 </a>
 
-[![INIT NEURAL MANIFOLD](https://img.shields.io/badge/INIT_NEURAL_MANIFOLD-00FFA0?style=for-the-badge&logo=rust&logoColor=black)](https://Jellyjam2.github.io/Lumina-Guardian-Live/)
+[![INIT NEURAL MANIFOLD](https://img.shields.io/badge/INIT_NEURAL_MANIFOLD-00FFA0?style=for-the-badge&logo=rust&logoColor=black)](https://Jellyjam2.github.io/Jellyjam2/)
 
 ---
 
