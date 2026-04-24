@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🜏 LUMINA-XENON: THE GUARDIAN</title>
+        <style>
+            html, body { 
+                margin: 0; 
+                padding: 0; 
+                width: 100%; 
+                height: 100%; 
+                overflow: hidden; 
+                background-color: #050a0f; 
+            }
+            canvas { 
+                display: block;
+                width: 100vw; 
+                height: 100vh; 
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    
+        <script type="module">
+            /**
+             * NEURAL PATH ALIGNMENT
+             * This logic calculates the correct subfolder (e.g., /jellyjam2/) 
+             * to ensure the WASM engine ignites correctly on GitHub Pages.
+             */
+            const path = window.location.pathname;
+            const base = path.substring(0, path.lastIndexOf('/'));
+            
+            // Import the JavaScript glue code
+            import init from './lumina_guardian.js';
+            
+            async function ignition() {
+                try {
+                    // Ignite the WASM binary using the calculated base path
+                    await init(`${base}/lumina_guardian_bg.wasm`);
+                    console.log("LUMINA-XENON: Neural Manifold ACTIVE");
+                } catch (err) {
+                    console.error("LUMINA-XENON: Ignition Failure", err);
+                    console.log("Check: Are files named exactly 'lumina_guardian.js' and 'lumina_guardian_bg.wasm'?");
+                }
+            }
+
+            ignition();
+        </script>
+    </body>
+</html>
