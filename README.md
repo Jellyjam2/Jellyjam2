@@ -11,8 +11,8 @@
 
 ---
 
-<img src="https://github-readme-stats.vercel.app/api.?username=Jellyjam2&theme=monokai&hide_border=true" />
-<img src="https://github-readme-stats.vercel.app/api/top-langs/username=Jellyjam2&theme=monokai&hide_border=true" />
+<img src="https://github-readme-stats.vercel.app/api?username=Jellyjam2&theme=monokai&hide_border=true" />
+<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Jellyjam2&theme=monokai&hide_border=true" />
 
 ---
 
