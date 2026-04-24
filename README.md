@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🜏 J E L L Y J A M 2 🜏
+#  J E L L Y J A M 2 
 ### `SYSTEMS ENGINEER | NEURAL LOGIC ARCHITECT`
 
 <a href="https://Jellyjam2.github.io/Lumina-Guardian-Live/">
