@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🜏 LUMINA-XENON: THE GUARDIAN</title>
+        <!-- This line kills the 404 error by giving the browser a placeholder icon -->
+        <link rel="icon" href="data:,">
+        <style>
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #050a0f; }
+            canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: crosshair; }
+        </style>
+    </head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    
+        <script type="module">
+            import init from './lumina_guardian.js';
+            
+            async function ignition() {
+                try {
+                    await init({ module_or_path: './lumina_guardian_bg.wasm' });
+                    console.log("🜏 LUMINA-XENON: Neural Manifold ACTIVE");
+                    
+                    // MANIFEST AVATAR: We switch from the bunny to your 3D Profile Picture
+                    const avatar = new Image();
+                    avatar.src = './assets/avatar.png?v=' + Date.now();
+                    
+                    avatar.onload = () => {
+                        console.log("🜏 LUMINA-XENON: Avatar Manifested");
+                        // This forces the 3D engine to center the camera immediately
+                        window.dispatchEvent(new Event('resize'));
+                    };
+                } catch (err) {
+                    console.error("🜏 LUMINA-XENON: Ignition Failure", err);
+                }
+            }
+
+            ignition();
+        </script>
+    </body>
+</html>
