@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🜏 LUMINA-XENON: THE GUARDIAN</title>
+        <!-- Favicon Fix to clear the console noise -->
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🜏</text></svg>">
+        <style>
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #050a0f; }
+            canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+        </style>
+    </head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    
+        <script type="module">
+            /**
+             * ABSOLUTE NEURAL ALIGNMENT
+             * We use a relative import to ensure GitHub finds the JS file 
+             * and an absolute fetch for the WASM binary.
+             */
+            import init from './lumina_guardian_bg.js';
+            
+            async function ignition() {
+                try {
+                    // This tells the engine to look 'right here' for the binary
+                    await init('./lumina_guardian_bg.wasm');
+                    console.log("🜏 LUMINA-XENON: Neural Manifold ACTIVE");
+                    
+                    // Manifest the Guardian
+                    const guardian = new Image();
+                    guardian.src = './assets/lumina_bunny.png?v=' + Date.now();
+                    guardian.onload = () => {
+                        console.log("🜏 SUCCESS: Guardian Uncloaked.");
+                        window.dispatchEvent(new Event('resize'));
+                    };
+
+                } catch (err) {
+                    console.error("🜏 IGNITION FAILURE:", err);
+                }
+            }
+
+            ignition();
+        </script>
+    </body>
+</html>
