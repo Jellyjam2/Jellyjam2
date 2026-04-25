@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🜏 LUMINA-XENON: THE GUARDIAN</title>
+        <!-- This removes the red 404 favicon error from your console -->
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🜏</text></svg>">
+        <style>
+            html, body { 
+                margin: 0; 
+                padding: 0; 
+                width: 100%; 
+                height: 100%; 
+                overflow: hidden; 
+                background-color: #050a0f; 
+            }
+            canvas { 
+                display: block;
+                width: 100vw; 
+                height: 100vh; 
+                touch-action: none;
+                cursor: crosshair;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- The Window into the 3D Neural Manifold -->
+        <canvas id="the_canvas_id"></canvas>
+    
+        <script type="module">
+            /**
+             * LUMINA-XENON: PRODUCTION IGNITION
+             * Direct-linking the Sovereign Avatar for the WoW Factor.
+             */
+            import init from './lumina_guardian.js';
+            
+            async function ignition() {
+                try {
+                    // 1. Ignite the Rust/WASM Engine
+                    await init({ module_or_path: './lumina_guardian_bg.wasm' });
+                    console.log("🜏 LUMINA-XENON: Neural Manifold ACTIVE");
+                    
+                    // 2. Direct Neural Link to your Sovereign Identity
+                    // This pulls your high-res GitHub avatar directly from the network.
+                    const avatar = new Image();
+                    avatar.src = 'https://github.com';
+                    
+                    avatar.onload = () => {
+                        console.log("🜏 LUMINA-XENON: Avatar Manifested");
+                        // Triggers the engine to center the camera on the new asset
+                        window.dispatchEvent(new Event('resize'));
+                    };
+
+                } catch (err) {
+                    console.error("🜏 LUMINA-XENON: Ignition Failure", err);
+                }
+            }
+
+            ignition();
+        </script>
+    </body>
+</html>
