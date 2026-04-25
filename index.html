@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>🜏 LUMINA-XENON: THE GUARDIAN</title>
+        <style>
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #050a0f; }
+            canvas { width: 100%; height: 100%; }
+        </style>
+    <link rel="modulepreload" href="./lumina_guardian-4229c7a4356fee06.js" crossorigin="anonymous" integrity="sha384-SCqhNe4bsEnDMA/b/Uj/b9nsMVuaQ6iQtxrmp8DLSHxAs98V/8la3tz+rvjoVjSg"><link rel="preload" href="./lumina_guardian-4229c7a4356fee06_bg.wasm" crossorigin="anonymous" integrity="sha384-4+5ghbTBcLhylgfOxhBn6UJuZG/s1l/w86RodhVbIzvMYmOkrEWuYoICJ6YI9Lof" as="fetch" type="application/wasm"></head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    
+<script type="module">
+import init, * as bindings from './lumina_guardian-4229c7a4356fee06.js';
+const wasm = await init({ module_or_path: './lumina_guardian-4229c7a4356fee06_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
