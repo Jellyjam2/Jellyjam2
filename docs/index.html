@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>🜏 LUMINA: SOVEREIGN TRINITY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- TRUNK INJECTS THE ENGINE HERE -->
+    
+<script type="module">
+import init, * as bindings from '/Jellyjam2/lumina_guardian-e630a0391dad3bc8.js';
+const wasm = await init({ module_or_path: '/Jellyjam2/lumina_guardian-e630a0391dad3bc8_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+    
+    <style>
+        /* --- THE 0-HEIGHT FIX --- */
+        /* We force the browser to give us 100% of the screen verticality */
+        html { height: 100%; width: 100%; }
+        body { 
+            height: 100%; width: 100%; 
+            margin: 0; padding: 0; 
+            background-color: #050a0f; 
+            overflow: hidden; /* No scrollbars allowed */
+        }
+
+        /* The Canvas gets absolute authority over the screen space */
+        canvas { 
+            display: block; 
+            position: absolute; 
+            top: 0; left: 0;
+            width: 100%; height: 100%; 
+            z-index: 0;
+        }
+        
+        /* --- UI LAYER --- */
+        #hub {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 600px; padding: 15px;
+            background: rgba(5, 10, 15, 0.95);
+            border: 1px solid #00ffaa; color: #00ffaa;
+            font-family: 'Courier New', Courier, monospace;
+            z-index: 10; /* Sits ON TOP of the canvas */
+            box-shadow: 0 0 40px rgba(0, 255, 170, 0.15);
+        }
+        input { width: 100%; background: transparent; border: none; color: white; font-size: 16px; outline: none; }
+    </style>
+<link rel="modulepreload" href="/Jellyjam2/lumina_guardian-e630a0391dad3bc8.js" crossorigin="anonymous" integrity="sha384-TIUpbN8kbikXTAzmQOAuSI/OKmWbGl2h3a4vbyK8rmPC2dMVjfE/CrHnMIXiv/S3"><link rel="preload" href="/Jellyjam2/lumina_guardian-e630a0391dad3bc8_bg.wasm" crossorigin="anonymous" integrity="sha384-8AvPfvWHOiCC3xWzNsj2uf5bwOPNW+Gnt2X3AG5VgcLIDbmtw8zZeGTl96cksdMi" as="fetch" type="application/wasm"></head>
+<body>
+    <!-- THE CANVAS ID MUST MATCH MAIN.RS -->
+    <canvas id="the_canvas_id"></canvas>
+
+    <div id="hub">
+        <div style="font-size: 10px; opacity: 0.7; margin-bottom: 5px;" id="status-text">SYSTEM BOOT...</div>
+        <input type="text" placeholder="Command the Sovereign..." onkeydown="handleInput(event)">
+    </div>
+
+    <script>
+        // --- ROBUST BRIDGE FINDER ---
+        // We increased the timeout to 60 seconds for older hardware
+        async function findNeuralBridge() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const scanner = setInterval(() => {
+                    attempts++;
+                    // Look for the manually attached Rust function
+                    if (window.dispatch_neural_command) { 
+                        clearInterval(scanner);
+                        document.getElementById("status-text").innerText = "NEURAL LINK: ESTABLISHED";
+                        resolve(window.dispatch_neural_command);
+                    } 
+                    else if (attempts > 600) { // 60 Seconds Timeout
+                        clearInterval(scanner);
+                        document.getElementById("status-text").innerText = "ERROR: NEURAL TIMEOUT";
+                        reject("RUST CORE NOT DETECTED");
+                    }
+                }, 100);
+            });
+        }
+
+        // Boot Sequence
+        window.onload = () => {
+            findNeuralBridge();
+        };
+
+        // Manual Input Handler
+        window.handleInput = (e) => {
+            if (e.key === 'Enter') {
+                const cmd = e.target.value.toLowerCase();
+                
+                if (window.dispatch_neural_command) {
+                    // Simple Parser for testing
+                    if(cmd.includes("red")) window.dispatch_neural_command(255, 0, 0, 0.05, true);
+                    else if(cmd.includes("blue")) window.dispatch_neural_command(0, 100, 255, 0.01, false);
+                    else if(cmd.includes("fast")) window.dispatch_neural_command(0, 255, 100, 0.1, true);
+                    else window.dispatch_neural_command(255, 255, 255, 0.02, true);
+                    
+                    e.target.value = "COMMAND EXECUTED";
+                } else {
+                    e.target.value = "WAITING FOR ENGINE...";
+                }
+            }
+        };
+    </script>
+</body>
+</html>
