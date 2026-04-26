@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>LUMINA: SOVEREIGN TRINITY</title>
+    <style>
+        body { margin: 0; background: #050a0f; overflow: hidden; font-family: monospace; color: #00ffaa; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        /* THE COMMAND HUB */
+        #hub {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 700px; padding: 15px;
+            background: rgba(0, 15, 10, 0.9); border: 1px solid #00ffaa;
+            display: none; z-index: 100;
+        }
+        
+        textarea { 
+            width: 100%; height: 80px; background: rgba(0,0,0,0.5); 
+            border: 1px solid #004422; color: #fff; font-family: monospace;
+            margin-top: 10px; outline: none; padding: 5px;
+        }
+        
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        button { background: #004422; border: 1px solid #00ffaa; color: #00ffaa; cursor: pointer; padding: 5px 10px; }
+        button:hover { background: #00ffaa; color: #000; }
+        #mic-btn.active { background: red; color: white; border-color: white; }
+    </style>
+
+    <script type="module">
+        import * as webllm from "https://esm.run";
+        let engine, pyodide;
+        const synth = window.speechSynthesis;
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = false;
+
+        async function ignite() {
+            console.log("🜏 IGNITING TRINITY...");
+            engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC", { 
+                initProgressCallback: (r) => { document.getElementById("status").innerText = r.text; }
+            });
+            document.getElementById("hub").style.display = "block";
+            document.getElementById("status").innerText = "SYSTEM ONLINE // AWAITING INPUT";
+        }
+
+        // --- THE VOICE MOUTH ---
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.pitch = 0.8; utter.rate = 1.1; // "Cybernetic" tone
+            synth.speak(utter);
+        }
+
+        // --- THE NEURAL PROCESSING ---
+        async function process(text) {
+            document.getElementById("status").innerText = "THINKING...";
+            const messages = [
+                {role: "system", content: "You are the Lumina OS. If user provides code, review it briefly. Then output JSON for the UI: {'r':0-255,'g':0-255,'b':0-255,'speed':0.01,'reveal':bool,'speech':'Your vocal response here'}"},
+                {role: "user", content: text}
+            ];
+
+            const reply = await engine.chat.completions.create({ messages });
+            const raw = reply.choices[0].message.content.replace(/```json|```/g, "");
+            
+            try {
+                const cmd = JSON.parse(raw);
+                // 1. Update Rust Physics
+                if (window.wasmBindings) window.wasmBindings.dispatch_neural_command(cmd.r, cmd.g, cmd.b, cmd.speed, cmd.reveal);
+                // 2. Speak back to User
+                speak(cmd.speech);
+                document.getElementById("status").innerText = "READY";
+            } catch(e) { speak("Neural Parse Error. Logic corrupted."); }
+        }
+
+        // --- EVENT LISTENERS ---
+        window.sendScript = () => {
+            const code = document.getElementById("script-box").value;
+            process("Review this script: " + code);
+        };
+
+        window.toggleMic = () => {
+            recognition.start();
+            document.getElementById("mic-btn").classList.add("active");
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById("mic-btn").classList.remove("active");
+            process(transcript);
+        };
+
+        ignite();
+    </script>
+<link rel="modulepreload" href="./lumina_guardian-7d2d532112be7c0f.js" crossorigin="anonymous" integrity="sha384-nxZY0WZjp5TIIkAFrhZCFm6GFiqmf0JIzBM0Nm+ZzSTWb9bsTV6HPQKphXmzFg14"><link rel="preload" href="./lumina_guardian-7d2d532112be7c0f_bg.wasm" crossorigin="anonymous" integrity="sha384-ZmCrd9S2OFbVLVjXElO2EZEHar9/AeP+YxZKChP/Ztb8UNrhaQM7k43WUYSoESYp" as="fetch" type="application/wasm"></head>
+<body>
+    <canvas id="the_canvas_id"></canvas>
+    
+    <div id="hub">
+        <div id="status">INITIALIZING...</div>
+        <textarea id="script-box" placeholder="PASTE SCRIPT HERE FOR REVIEW..."></textarea>
+        <div class="controls">
+            <button id="mic-btn" onclick="toggleMic()">🎤 VOICE COMMAND</button>
+            <button onclick="sendScript()">🚀 ANALYZE SCRIPT</button>
+        </div>
+    </div>
+    
+<script type="module">
+import init, * as bindings from './lumina_guardian-7d2d532112be7c0f.js';
+const wasm = await init({ module_or_path: './lumina_guardian-7d2d532112be7c0f_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+</body>
+</html>
