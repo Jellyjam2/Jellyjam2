@@ -1,164 +1,123 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
-use eframe::egui;
+use eframe::{egui, App, Frame};
+use egui::{Color32, Pos2, RichText, Stroke, Vec2};
 use rand::Rng;
-use std::sync::Mutex;
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsCast;
-
-// --- 1. GLOBAL NEURAL STATE ---
-#[derive(Clone, Copy, Debug)]
-pub struct NeuralState {
-    pub r: u8, pub g: u8, pub b: u8,
-    pub speed: f32,
-    pub reveal: bool,
+// 1. The Data Structure
+struct LuminaApp {
+    stars: Vec<Star>,
+    system_active: bool,
+    command_buffer: String,
 }
 
-lazy_static::lazy_static! {
-    static ref NEURAL_LINK: Mutex<NeuralState> = Mutex::new(NeuralState {
-        r: 0, g: 255, b: 255, // Default Cyan
-        speed: 0.005,
-        reveal: false,
-    });
+struct Star {
+    pos: Pos2,
+    speed: f32,
+    size: f32,
 }
 
-// This is the Rust-side handler
-pub fn update_neural_state(r: u8, g: u8, b: u8, speed: f32, reveal: bool) {
-    if let Ok(mut state) = NEURAL_LINK.lock() {
-        state.r = r; state.g = g; state.b = b;
-        state.speed = speed; state.reveal = reveal;
-    }
-}
-
-// --- 2. VISUAL ENGINE ---
-struct Particle { pos: [f32; 3], vel: f32, color: egui::Color32 }
-
-pub struct LuminaSovereign {
-    particles: Vec<Particle>,
-    rotation: f32,
-    pitch: f32,
-}
-
-impl LuminaSovereign {
+impl LuminaApp {
     fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let mut rng = rand::thread_rng();
-        let mut particles = Vec::new();
-        for _ in 0..500 {
-            particles.push(Particle {
-                pos: [rng.gen_range(-800.0..800.0), rng.gen_range(-500.0..500.0), rng.gen_range(-800.0..800.0)],
-                vel: rng.gen_range(0.5..2.0),
-                color: egui::Color32::from_white_alpha(rng.gen_range(50..200)),
-            });
+        Self {
+            stars: (0..100).map(|_| Star::random()).collect(),
+            system_active: false,
+            command_buffer: String::new(),
         }
-        Self { particles, rotation: 0.0, pitch: 0.5 }
     }
 }
 
-fn project_iso(pos: [f32; 3], rot: f32, pitch: f32, center: egui::Pos2) -> egui::Pos2 {
-    let (sin_r, cos_r) = rot.sin_cos();
-    let (sin_p, cos_p) = pitch.sin_cos();
-    let x = pos[0] * cos_r - pos[2] * sin_r;
-    let z_t = pos[0] * sin_r + pos[2] * cos_r;
-    let y = pos[1] * cos_p - z_t * sin_p;
-    let z = pos[1] * sin_p + z_t * cos_p + 800.0;
-    egui::pos2(center.x + x * (800.0 / z), center.y + y * (800.0 / z))
-}
+impl App for LuminaApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        // A. VISUALS: Force Dark Mode
+        let mut visuals = egui::Visuals::dark();
+        visuals.window_fill = Color32::from_rgb(10, 12, 16); 
+        ctx.set_visuals(visuals);
 
-impl eframe::App for LuminaSovereign {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let state = NEURAL_LINK.lock().unwrap().clone();
-        let ai_color = egui::Color32::from_rgb(state.r, state.g, state.b);
-
-        egui::CentralPanel::default().frame(egui::Frame::none().fill(egui::Color32::from_rgb(5, 10, 15))).show(ctx, |ui| {
-            let rect = ui.max_rect();
-            let painter = ui.painter();
-            let center = rect.center();
-
-            self.rotation += state.speed;
-
-            // Physics
-            for p in &mut self.particles {
-                p.pos[1] += p.vel;
-                if p.pos[1] > 500.0 { p.pos[1] = -500.0; }
+        // B. ANIMATION: Starfield
+        let painter = ctx.layer_painter(egui::LayerId::background());
+        let screen_rect = ctx.screen_rect();
+        
+        for star in &mut self.stars {
+            star.pos.y += star.speed;
+            if star.pos.y > screen_rect.height() {
+                star.pos.y = 0.0;
+                star.pos.x = rand::thread_rng().gen_range(0.0..screen_rect.width());
             }
-
-            // Draw Grid
-            let grid_size = 1200.0;
-            for i in (-10..10).map(|x| x as f32 * 100.0) {
-                let p1 = project_iso([i, 200.0, -grid_size], self.rotation, self.pitch, center);
-                let p2 = project_iso([i, 200.0, grid_size], self.rotation, self.pitch, center);
-                painter.line_segment([p1, p2], egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 40, 40)));
-            }
-
-            // Draw Snow
-            for p in &self.particles {
-                let s_pos = project_iso(p.pos, self.rotation, self.pitch, center);
-                if rect.contains(s_pos) { painter.circle_filled(s_pos, 1.5, p.color); }
-            }
-
-            // Draw HUD
-            let pointer = ctx.input(|i| i.pointer.hover_pos().unwrap_or(center));
-            let tilt = (pointer - center) * 0.1;
-            
-            if !state.reveal {
-                let box_rect = egui::Rect::from_center_size(center + tilt, egui::vec2(140.0, 140.0));
-                painter.rect_filled(box_rect, 15.0, egui::Color32::BLACK);
-                painter.rect_stroke(box_rect, 15.0, egui::Stroke::new(3.0, ai_color));
-                painter.text(center + tilt, egui::Align2::CENTER_CENTER, "SYSTEM", egui::FontId::proportional(24.0), ai_color);
-            } else {
-                let scale = 130.0;
-                for i in (1..=10).rev() {
-                    let depth = i as f32 * 5.0;
-                    let alpha = (150 - (i * 10)).clamp(0, 255) as u8;
-                    let pos_offset = tilt - egui::vec2(depth * 0.5, depth * 0.5);
-                    painter.text(center + pos_offset, egui::Align2::CENTER_CENTER, "LUMINA", egui::FontId::proportional(scale), egui::Color32::from_rgba_unmultiplied(state.r, state.g, state.b, alpha));
-                }
-                painter.text(center + tilt, egui::Align2::CENTER_CENTER, "LUMINA", egui::FontId::proportional(scale), egui::Color32::WHITE);
-            }
-        });
+            painter.circle_filled(
+                star.pos,
+                star.size,
+                Color32::from_rgba_premultiplied(0, 255, 255, (150.0 * star.speed) as u8),
+            );
+        }
         ctx.request_repaint();
+
+        // C. INTERFACE: Central Button
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(150.0);
+                let btn = egui::Button::new(RichText::new("SYSTEM").size(20.0).strong())
+                    .min_size(Vec2::new(150.0, 60.0))
+                    .fill(if self.system_active { Color32::from_rgb(0, 100, 100) } else { Color32::TRANSPARENT })
+                    .stroke(Stroke::new(2.0, Color32::from_rgb(0, 255, 255)));
+
+                if ui.add(btn).clicked() {
+                    self.system_active = !self.system_active;
+                }
+
+                ui.add_space(20.0);
+                ui.label(RichText::new("NEURAL LINK: ESTABLISHED").color(Color32::from_rgb(0, 255, 255)));
+                ui.add(egui::TextEdit::singleline(&mut self.command_buffer).desired_width(300.0));
+            });
+        });
+
+        // D. LOGIC: Diagnostics Window
+        if self.system_active {
+            egui::Window::new("CORE DIAGNOSTICS")
+                .default_pos([50.0, 50.0])
+                .show(ctx, |ui| {
+                    ui.heading("STATUS: ONLINE");
+                    ui.label(format!("Frame Time: {:.2}ms", ctx.input(|i| i.stable_dt) * 1000.0));
+                    ui.label("Memory Integrity: 100%");
+                    if ui.button("PURGE CACHE").clicked() {
+                        self.command_buffer.clear();
+                    }
+                });
+        }
     }
 }
 
-// --- 3. LAUNCHER ---
-#[cfg(not(target_arch = "wasm32"))]
-fn main() -> eframe::Result<()> {
-    let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(1200.0, 800.0)),
-        fullscreen: true,
-        ..Default::default()
-    };
-    eframe::run_native("LUMINA NEURAL", options, Box::new(|cc| Box::new(LuminaSovereign::new(cc))))
+impl Star {
+    fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        Self {
+            pos: Pos2::new(rng.gen_range(0.0..2000.0), rng.gen_range(0.0..1000.0)),
+            speed: rng.gen_range(0.5..3.0),
+            size: rng.gen_range(1.0..3.0),
+        }
+    }
 }
 
+// 2. THE WEB ENTRY POINT (This fixes the errors)
 #[cfg(target_arch = "wasm32")]
 fn main() {
+    // Redirect logs to console
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
 
-    // --- MANUAL ATTACHMENT STRATEGY ---
-    // We explicitly attach the function to 'window.dispatch_neural_command'
-    // This bypasses Trunk's naming issues.
-    if let Some(window) = web_sys::window() {
-        let closure = Closure::wrap(Box::new(move |r, g, b, speed, reveal| {
-            update_neural_state(r, g, b, speed, reveal);
-        }) as Box<dyn FnMut(u8, u8, u8, f32, bool)>);
-
-        let _ = js_sys::Reflect::set(
-            &window,
-            &JsValue::from_str("dispatch_neural_command"),
-            closure.as_ref().unchecked_ref(),
-        );
-        closure.forget(); // Keep memory alive
-    }
-
     let web_options = eframe::WebOptions::default();
+
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
-            .start("the_canvas_id", web_options, Box::new(|cc| Box::new(LuminaSovereign::new(cc))))
+            .start(
+                "the_canvas_id", // CONNECTS TO YOUR NEW INDEX.HTML
+                web_options,
+                Box::new(|cc| Box::new(LuminaApp::new(cc))),
+            )
             .await
             .expect("failed to start eframe");
     });
+}
+
+// Desktop Fallback (Just in case)
+#[cfg(not(target_arch = "wasm32"))]
+fn main() {
+    // Empty for now, we are focused on Web
 }
