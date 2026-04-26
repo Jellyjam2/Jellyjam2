@@ -2,13 +2,13 @@ use eframe::{egui, App, Frame};
 use egui::{Color32, Pos2, RichText, Stroke, Vec2};
 use rand::Rng;
 
-// 1. Data Structure (Added 'console_log' and 'warp_factor')
+// 1. Data Structure
 struct LuminaApp {
     stars: Vec<Star>,
     system_active: bool,
     command_buffer: String,
-    console_log: Vec<String>, // Stores the history of text
-    warp_factor: f32,         // Controls star speed
+    console_log: Vec<String>, 
+    warp_factor: f32,         
 }
 
 struct Star {
@@ -28,19 +28,15 @@ impl LuminaApp {
         }
     }
 
-    // THE BRAIN: Decides what to do with text
     fn process_command(&mut self) {
         let input = self.command_buffer.trim().to_lowercase();
-        
         if input.is_empty() { return; }
 
-        // Echo the user's command
         self.console_log.push(format!("> {}", input));
 
-        // Match the command to an action
         match input.as_str() {
             "warp" => {
-                self.warp_factor = 5.0;
+                self.warp_factor = 8.0; // Increased speed for visibility
                 self.console_log.push(">> WARP DRIVE ENGAGED".to_string());
             }
             "steady" => {
@@ -63,31 +59,25 @@ impl LuminaApp {
             }
         }
 
-        // Keep log short (Last 6 lines only)
-        if self.console_log.len() > 6 {
+        if self.console_log.len() > 8 {
             self.console_log.remove(0);
         }
-
-        // Clear the input box
         self.command_buffer.clear();
     }
 }
 
 impl App for LuminaApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
-        // A. VISUALS
         let mut visuals = egui::Visuals::dark();
         visuals.window_fill = Color32::from_rgb(10, 12, 16); 
         ctx.set_visuals(visuals);
 
-        // B. ANIMATION (Now multiplied by warp_factor)
         let painter = ctx.layer_painter(egui::LayerId::background());
         let screen_rect = ctx.screen_rect();
         
+        // Animation Loop
         for star in &mut self.stars {
-            // Apply WARP SPEED
             star.pos.y += star.speed * self.warp_factor;
-            
             if star.pos.y > screen_rect.height() {
                 star.pos.y = 0.0;
                 star.pos.x = rand::thread_rng().gen_range(0.0..screen_rect.width());
@@ -100,12 +90,10 @@ impl App for LuminaApp {
         }
         ctx.request_repaint();
 
-        // C. INTERFACE
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(100.0);
                 
-                // The System Button
                 let btn = egui::Button::new(RichText::new("SYSTEM").size(20.0).strong())
                     .min_size(Vec2::new(150.0, 60.0))
                     .fill(if self.system_active { Color32::from_rgb(0, 100, 100) } else { Color32::TRANSPARENT })
@@ -117,7 +105,6 @@ impl App for LuminaApp {
 
                 ui.add_space(50.0);
 
-                // === NEW: CONSOLE LOG DISPLAY ===
                 for line in &self.console_log {
                     ui.label(RichText::new(line).color(Color32::from_rgb(0, 200, 0)).monospace());
                 }
@@ -125,26 +112,25 @@ impl App for LuminaApp {
                 ui.add_space(10.0);
                 ui.label(RichText::new("NEURAL LINK: ESTABLISHED").color(Color32::from_rgb(0, 255, 255)));
                 
-                // === NEW: INPUT PARSER ===
+                // === FIXED INPUT HANDLER ===
                 let response = ui.add(egui::TextEdit::singleline(&mut self.command_buffer)
                     .desired_width(300.0)
-                    .lock_focus(true)); // Keep focus so you can type fast
+                    .lock_focus(true)); // Keeps typing active
 
-                // Detect ENTER Key
-                if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                // TRIGGER: If Enter is pressed ANYWHERE, fire the command.
+                if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                     self.process_command();
-                    response.request_focus(); // Snap focus back to box
+                    response.request_focus();
                 }
             });
         });
 
-        // D. DIAGNOSTICS HUD
         if self.system_active {
             egui::Window::new("CORE DIAGNOSTICS")
                 .default_pos([50.0, 50.0])
                 .show(ctx, |ui| {
                     ui.heading("STATUS: ONLINE");
-                    ui.label(format!("Warp Factor: {:.1}x", self.warp_factor)); // Show speed
+                    ui.label(format!("Warp Factor: {:.1}x", self.warp_factor));
                     ui.label(format!("Frame Time: {:.2}ms", ctx.input(|i| i.stable_dt) * 1000.0));
                 });
         }
@@ -162,7 +148,6 @@ impl Star {
     }
 }
 
-// WEB ENTRY POINT
 #[cfg(target_arch = "wasm32")]
 fn main() {
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
