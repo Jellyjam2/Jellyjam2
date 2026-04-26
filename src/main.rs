@@ -7,28 +7,30 @@ struct LuminaApp {
     system_active: bool,
     command_buffer: String,
     console_log: Vec<String>, 
-    warp_factor: f32,         
+    warp_factor: f32,
+    time: f32,
 }
 
 struct Star {
-    angle: f32,  // Direction from center
-    dist: f32,   // Distance from center
+    angle: f32,
+    dist: f32,
     speed: f32,
     size: f32,
+    // Removed 'z' to fix the warning
 }
 
 impl LuminaApp {
     fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            // Spawn 150 stars
-            stars: (0..150).map(|_| Star::random_start()).collect(),
+            stars: (0..200).map(|_| Star::random()).collect(),
             system_active: false,
             command_buffer: String::new(),
             console_log: vec![
-                "VISUAL LAYER: MERGED".to_string(), 
-                "3D GEOMETRY: ENGAGED".to_string()
+                "VISUALS: RE-ROUTED".to_string(), 
+                "VORTEX: VISIBLE".to_string()
             ],
             warp_factor: 1.0,
+            time: 0.0,
         }
     }
 
@@ -39,16 +41,16 @@ impl LuminaApp {
 
         match input.as_str() {
             "warp" => {
-                self.warp_factor = 8.0; 
-                self.console_log.push(">> WARP DRIVE ENGAGED".to_string());
+                self.warp_factor = 10.0; 
+                self.console_log.push(">> HYPER-SPIN ENGAGED".to_string());
             }
             "steady" => {
                 self.warp_factor = 1.0;
-                self.console_log.push(">> ENGINES STABILIZED".to_string());
+                self.console_log.push(">> ORBIT STABILIZED".to_string());
             }
             "halt" => {
                 self.warp_factor = 0.0;
-                self.console_log.push(">> ALL STOP".to_string());
+                self.console_log.push(">> ROTATION LOCKED".to_string());
             }
             "clear" => { self.console_log.clear(); }
             _ => { self.console_log.push(">> UNKNOWN COMMAND".to_string()); }
@@ -60,61 +62,59 @@ impl LuminaApp {
 
 impl App for LuminaApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
-        // A. Force Dark Background
+        self.time += 0.002 * self.warp_factor;
+
+        // 1. GLOBAL STYLE
         let mut visuals = egui::Visuals::dark();
         visuals.window_fill = Color32::BLACK; 
         ctx.set_visuals(visuals);
 
-        // B. CRITICAL FIX: Transparent Panel (The Glass Window)
+        // 2. THE BACKGROUND LAYER (The Stars live here now)
+        // This guarantees they are drawn BEHIND the buttons but ON TOP of the black void.
+        let painter = ctx.layer_painter(egui::LayerId::background());
+        let screen_rect = ctx.screen_rect();
+        let center = screen_rect.center();
+
+        for star in &mut self.stars {
+            // Physics: Expand Outwards
+            star.dist += star.speed * (self.warp_factor * 0.5);
+            
+            // Reset if too far
+            if star.dist > screen_rect.width() {
+                star.dist = rand::thread_rng().gen_range(10.0..50.0); // Spawn in center
+            }
+
+            // Rotation Math
+            let current_angle = star.angle + self.time; 
+            let x = center.x + current_angle.cos() * star.dist;
+            let y = center.y + current_angle.sin() * star.dist;
+            let pos = Pos2::new(x, y);
+
+            // Draw Star (Bright in center, fade at edge)
+            let alpha = (1.0 - (star.dist / 1000.0)) * 255.0;
+            painter.circle_filled(
+                pos,
+                star.size,
+                Color32::from_rgba_premultiplied(0, 255, 255, alpha as u8),
+            );
+
+            // Draw Neural Connections (Spinning Web)
+            if star.dist < 300.0 {
+                painter.line_segment(
+                    [center, pos],
+                    Stroke::new(1.0, Color32::from_rgba_premultiplied(0, 100, 255, (alpha * 0.5) as u8))
+                );
+            }
+        }
+        
+        ctx.request_repaint(); 
+
+        // 3. THE UI LAYER (Transparent Container)
         egui::CentralPanel::default()
-            .frame(egui::Frame::none()) // <--- THIS REMOVES THE BLACK CURTAIN
+            .frame(egui::Frame::none()) // Invisible Frame
             .show(ctx, |ui| {
-                
-                // C. 3D DRAWING ENGINE (Inside the UI loop now)
-                let painter = ui.painter();
-                let rect = ui.max_rect();
-                let center = rect.center();
-                let max_dist = rect.width().max(rect.height()) / 1.2;
-
-                // Update & Draw Stars
-                for star in &mut self.stars {
-                    // 1. Move Outwards (Radial Physics)
-                    star.dist += star.speed * self.warp_factor;
-
-                    // 2. Reset if off screen
-                    if star.dist > max_dist {
-                        star.dist = rand::thread_rng().gen_range(10.0..50.0); // Respawn in center
-                        star.angle = rand::thread_rng().gen_range(0.0..std::f32::consts::TAU);
-                    }
-
-                    // 3. Calculate 2D Position
-                    let x = center.x + star.angle.cos() * star.dist;
-                    let y = center.y + star.angle.sin() * star.dist;
-                    let pos = Pos2::new(x, y);
-
-                    // 4. Draw Star
-                    let alpha = (star.dist / max_dist) * 255.0; // Fade in as they get closer
-                    painter.circle_filled(
-                        pos,
-                        star.size * (star.dist / 200.0), // Get bigger as they get closer
-                        Color32::from_rgba_premultiplied(0, 255, 255, alpha as u8),
-                    );
-
-                    // 5. Draw Geometric Connections (The Web)
-                    // Connect to center if close
-                    if star.dist < 150.0 {
-                        painter.line_segment(
-                            [center, pos],
-                            Stroke::new(1.0, Color32::from_rgba_premultiplied(0, 255, 255, (255.0 - star.dist) as u8))
-                        );
-                    }
-                }
-                
-                ctx.request_repaint(); // Animate
-
-                // D. UI INTERFACE (Draws ON TOP of stars)
                 ui.vertical_centered(|ui| {
-                    ui.add_space(100.0);
+                    ui.add_space(150.0);
                     
                     let btn = egui::Button::new(RichText::new("SYSTEM").size(20.0).strong())
                         .min_size(Vec2::new(150.0, 60.0))
@@ -135,7 +135,13 @@ impl App for LuminaApp {
                         let width = 380.0; 
                         ui.add_space((ui.available_width() - width) / 2.0);
                         let response = ui.add(egui::TextEdit::singleline(&mut self.command_buffer).desired_width(300.0));
-                        if ui.button("RUN").clicked() { self.process_command(); response.request_focus(); }
+                        
+                        // RUN BUTTON
+                        if ui.button("RUN").clicked() { 
+                            self.process_command(); 
+                            response.request_focus(); 
+                        }
+                        // ENTER KEY
                         if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                             self.process_command();
                             response.request_focus();
@@ -147,13 +153,13 @@ impl App for LuminaApp {
 }
 
 impl Star {
-    fn random_start() -> Self {
+    fn random() -> Self {
         let mut rng = rand::thread_rng();
         Self {
-            angle: rng.gen_range(0.0..std::f32::consts::TAU), // 0 to 360 degrees
-            dist: rng.gen_range(10.0..600.0),
-            speed: rng.gen_range(0.5..2.5),
-            size: rng.gen_range(1.0..3.0),
+            angle: rng.gen_range(0.0..std::f32::consts::TAU),
+            dist: rng.gen_range(10.0..800.0),
+            speed: rng.gen_range(0.5..1.5),
+            size: rng.gen_range(1.5..3.0),
         }
     }
 }
