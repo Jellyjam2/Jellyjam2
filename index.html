@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>🜏 LUMINA: SOVEREIGN TRINITY</title>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #050a0f; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        #hub {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 700px; padding: 15px;
+            background: rgba(0, 15, 10, 0.9); border: 1px solid #00ffaa;
+            display: block; z-index: 100; color: #00ffaa; font-family: monospace;
+        }
+        #status { font-size: 10px; margin-bottom: 5px; opacity: 0.7; }
+        input { width: 100%; background: none; border: none; color: white; outline: none; font-family: monospace; font-size: 16px; }
+    </style>
+
+    <!-- LOAD THE AI ENGINE VIA STABLE CDN -->
+    <script type="module">
+        import * as webllm from "https://jsdelivr.net";
+        import init, * as bindings from './lumina_guardian.js';
+
+        let engine;
+        const synth = window.speechSynthesis;
+
+        async function ignite() {
+            const status = document.getElementById("status");
+            try {
+                // 1. SYNC RUST (Already proven working!)
+                await init({ module_or_path: './lumina_guardian_bg.wasm' }); 
+                window.wasmBindings = bindings;
+                
+                // 2. AWAKEN AI BRAIN (Llama 3.2 1B)
+                status.innerText = "🜏 DOWNLOADING NEURAL CORE [LLAMA 3.2]...";
+                engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC", { 
+                    initProgressCallback: (r) => { status.innerText = r.text; }
+                });
+                
+                status.innerText = "🜏 SOVEREIGN TRINITY ONLINE // AWAITING COMMAND";
+            } catch (e) {
+                status.innerText = "NEURAL BREACH: " + e.message;
+            }
+        }
+
+        window.handleInput = async (e) => {
+            if (e.key === 'Enter') {
+                const text = e.target.value; e.target.value = "Neural Processing...";
+                const systemPrompt = "You are the Lumina OS. Output ONLY JSON: {'r':0-255,'g':255,'b':255,'speed':0.01,'reveal':true,'speech':'...'}";
+                const reply = await engine.chat.completions.create({ 
+                    messages: [{role: "system", content: systemPrompt}, {role: "user", content: text}] 
+                });
+                const cmd = JSON.parse(reply.choices.message.content.replace(/```json|```/g, ""));
+                
+                // DISPATCH TO RUST
+                if (window.wasmBindings) window.wasmBindings.dispatch_neural_command(cmd.r, cmd.g, cmd.b, cmd.speed, cmd.reveal);
+                
+                // VOCAL RESPONSE
+                const utter = new SpeechSynthesisUtterance(cmd.speech);
+                utter.pitch = 0.7; synth.speak(utter);
+                e.target.value = "";
+            }
+        };
+
+        ignite();
+    </script>
+</head>
+<body>
+    <canvas id="the_canvas_id"></canvas>
+    <div id="hub">
+        <div id="status">INITIATING SOVEREIGN BOOT...</div>
+        <input type="text" placeholder="Command the Manifold..." onkeydown="handleInput(event)">
+    </div>
+</body>
+</html>
