@@ -22,8 +22,8 @@
     <!-- The connection to Rust -->
     
 <script type="module">
-import init, * as bindings from '/Jellyjam2/lumina_guardian-ed11c700bcbaaea6.js';
-const wasm = await init({ module_or_path: '/Jellyjam2/lumina_guardian-ed11c700bcbaaea6_bg.wasm' });
+import init, * as bindings from '/Jellyjam2/lumina_guardian-9b2c880813687b10.js';
+const wasm = await init({ module_or_path: '/Jellyjam2/lumina_guardian-9b2c880813687b10_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -32,7 +32,7 @@ window.wasmBindings = bindings;
 dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
 </script>
-<link rel="modulepreload" href="/Jellyjam2/lumina_guardian-ed11c700bcbaaea6.js" crossorigin="anonymous" integrity="sha384-h3qQ5H3Dh+Jj3aeFSYHkFUZ8Ma6jiVIp1zFs56ddyv8+AIZ7E9b1a62/hIGtohND"><link rel="preload" href="/Jellyjam2/lumina_guardian-ed11c700bcbaaea6_bg.wasm" crossorigin="anonymous" integrity="sha384-rinVupIz/I59HO83XIUuMU+UGxUlPZHQQ8NyibLDAQ/oV3cZ6o6uFW1x/lMw9QBe" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/Jellyjam2/lumina_guardian-9b2c880813687b10.js" crossorigin="anonymous" integrity="sha384-h3qQ5H3Dh+Jj3aeFSYHkFUZ8Ma6jiVIp1zFs56ddyv8+AIZ7E9b1a62/hIGtohND"><link rel="preload" href="/Jellyjam2/lumina_guardian-9b2c880813687b10_bg.wasm" crossorigin="anonymous" integrity="sha384-SRmTMegtOCKbgwpw9mjkhQ7WYqq9coK5j4jj4b/nYhi1ajjFYYVrDGni336AVBwA" as="fetch" type="application/wasm"></head>
 <body>
     <!-- The Engine Mount Point -->
     <canvas id="the_canvas_id"></canvas>
