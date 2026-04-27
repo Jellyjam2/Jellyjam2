@@ -15,72 +15,122 @@
             overflow: hidden; 
             font-family: 'Courier New', monospace;
         }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        /* FIXED: Force Canvas to Full Screen */
+        canvas { 
+            display: block; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1; 
+        }
         #status {
             position: absolute; bottom: 20px; left: 20px;
             color: #00ffaa; font-size: 14px; z-index: 10;
             pointer-events: none;
+            text-shadow: 0 0 5px #00ffaa;
         }
     </style>
 
     <link data-trunk rel="rust" data-wasm-opt="z" />
     
     <script type="module">
-        // === THE SOVEREIGN ARCHITECTURE ===
-        window.sovereign = {};
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-        // 1. VOICE MODULE (The Mouth)
+        // === SOVEREIGN GLOBAL STATE ===
+        window.sovereign = {};
+        let engine = null;
+        let hasGreeted = false;
+
+        // 1. VOCAL SYNTHESIS (The Voice)
         function speakJarvis(text) {
             if (!window.speechSynthesis) return;
-            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.cancel(); // Stop previous speech
             
-            // Find a good voice (Prefer Male/Robotic)
+            const msg = new SpeechSynthesisUtterance(text);
             const voices = window.speechSynthesis.getVoices();
-            const preferred = voices.find(v => v.name.includes("Google UK English Male")) || voices[0];
+            // Prefer a deep, British, or specific English voice
+            const voice = voices.find(v => v.name.includes("Google UK English Male")) || 
+                          voices.find(v => v.name.includes("English United Kingdom")) || 
+                          voices[0];
             
-            utterance.voice = preferred;
-            utterance.rate = 1.0; 
-            utterance.pitch = 0.9; // Slightly deeper
-            window.speechSynthesis.speak(utterance);
+            msg.voice = voice;
+            msg.rate = 1.0;
+            msg.pitch = 0.9; // Deepen the tone
+            window.speechSynthesis.speak(msg);
         }
 
-        // 2. INTELLIGENCE MODULE (The Brain)
+        // 2. THE BRAIN (Llama 3.2 Initialization)
+        async function igniteBrain() {
+            const status = document.getElementById("status");
+            status.innerText = ">> LOADING TITAN AI MODEL...";
+            
+            // Initialize the Local LLM
+            engine = await webllm.CreateMLCEngine(
+                "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+                { initProgressCallback: (p) => {
+                    status.innerText = `>> LOADING NEURAL WEIGHTS: ${(p.progress * 100).toFixed(0)}%`;
+                }}
+            );
+            
+            status.innerText = ">> AI CORE: ONLINE. AWAITING INPUT.";
+            console.log("Titan Engine Ready");
+        }
+
+        // 3. THE BRIDGE (Receives Text from Rust)
         window.sovereign.processInput = async function(text) {
-            console.log("LUMINA HEARING:", text);
-            const statusEl = document.getElementById("status");
-            statusEl.innerText = "LUMINA: THINKING...";
-
-            // Simple Logic Pattern (Fast Response)
-            let response = "";
-            const input = text.toLowerCase();
-
-            if (input.includes("hello") || input.includes("hi")) {
-                response = "Greetings, Enerico. The system is active.";
-            } else if (input.includes("status")) {
-                response = "Vortex engine running at 100% efficiency. All systems nominal.";
-            } else if (input.includes("who are you")) {
-                response = "I am Lumina, your Sovereign AI Construct.";
-            } else {
-                response = "I have logged that command, Enerico.";
+            const status = document.getElementById("status");
+            
+            // A. Simple Command Override (Fast Path)
+            if (text.toLowerCase() === "status") {
+                speakJarvis("Systems nominal, Enerico. Vortex density is 100 percent.");
+                return;
             }
 
-            // Speak the response
-            speakJarvis(response);
-            statusEl.innerText = "LUMINA: READY";
+            // B. AI Processing (Smart Path)
+            if (!engine) {
+                speakJarvis("Neural Engine is still warming up. Please wait.");
+                await igniteBrain();
+            }
+
+            status.innerText = ">> LUMINA THINKING...";
+            
+            // The System Prompt you requested
+            const systemPrompt = `
+            You are LUMINA, a Sovereign AI. User is 'Enerico'.
+            Keep answers brief, loyal, and cool. 1 sentence max.
+            `;
+
+            const messages = [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: text }
+            ];
+
+            const reply = await engine.chat.completions.create({ messages });
+            const responseText = reply.choices[0].message.content;
+
+            status.innerText = ">> RESPONSE SENT";
+            console.log("LUMINA SAYS:", responseText);
+            
+            // Speak the AI's answer
+            speakJarvis(responseText);
         };
 
-        // Initial Greeting on Click (Browsers block auto-audio)
+        // Initial Interaction Trigger
         window.addEventListener('click', () => {
-            if (!window.hasGreeted) {
+            if (!hasGreeted) {
                 speakJarvis("Identity confirmed. Welcome back, Enerico.");
-                window.hasGreeted = true;
+                hasGreeted = true;
+                // Start loading the AI immediately after first click
+                if (!engine) igniteBrain(); 
             }
         }, { once: true });
 
     </script>
 </head>
 <body>
-    <div id="status">>> INITIALIZING NEURAL LINK...</div>
+    <div id="status">>> SYSTEM READY. CLICK TO INITIALIZE.</div>
     <canvas id="the_canvas_id"></canvas>
 </body>
 </html>
