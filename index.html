@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>SOVEREIGN CORE // ENRICO</title>
+    <title>SOVEREIGN CORE // LOGIC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     
     <style>
@@ -18,111 +18,110 @@
         canvas { 
             display: block; 
             position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
             z-index: 1; 
         }
         #status {
             position: absolute; bottom: 20px; left: 20px;
-            color: #ffaa00; /* Amber for Nano Core */
+            color: #00ffff; /* CYAN for Logic Core */
             font-size: 14px; z-index: 10;
             pointer-events: none;
-            text-shadow: 0 0 5px #ffaa00;
+            text-shadow: 0 0 5px #00ffff;
         }
     </style>
 
     <link data-trunk rel="rust" data-wasm-opt="z" />
     
     <script type="module">
-        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
-        // === SOVEREIGN GLOBAL STATE ===
+        // === THE LOGIC CORE (NO DOWNLOAD REQUIRED) ===
         window.sovereign = {};
-        let engine = null;
         let hasGreeted = false;
 
         // 1. VOCAL SYNTHESIS (The Voice)
         function speakJarvis(text) {
             if (!window.speechSynthesis) return;
             window.speechSynthesis.cancel();
+            
             const msg = new SpeechSynthesisUtterance(text);
             const voices = window.speechSynthesis.getVoices();
-            const voice = voices.find(v => v.name.includes("Google UK English Male")) || voices[0];
+            // Try to find a robotic/deep voice
+            const voice = voices.find(v => v.name.includes("Google UK English Male")) || 
+                          voices.find(v => v.name.includes("English United Kingdom")) || 
+                          voices[0];
+            
             msg.voice = voice;
-            msg.rate = 1.1; // Faster for Nano Core
-            msg.pitch = 1.0; 
+            msg.rate = 1.0;
+            msg.pitch = 0.9; 
             window.speechSynthesis.speak(msg);
         }
 
-        // 2. THE NANO BRAIN (Qwen2 0.5B)
-        // This is the "Shrunk" Model - 60% Smaller than Llama
-        async function igniteBrain() {
-            const status = document.getElementById("status");
-            status.innerText = ">> INITIATING OMEGA BLITZ COMPRESSION...";
-            
-            // NANO-CORE CONFIGURATION
-            const selectedModel = "Qwen2-0.5B-Instruct-q4f16_1-MLC";
-            
-            engine = await webllm.CreateMLCEngine(
-                selectedModel,
-                { initProgressCallback: (p) => {
-                    // Show precise progress
-                    status.innerText = `>> COMPRESSING NEURAL WEIGHTS: ${(p.progress * 100).toFixed(1)}%`;
-                }}
-            );
-            
-            status.innerText = ">> NANO CORE: ONLINE. 1MS LATENCY ACHIEVED.";
-            console.log("Nano Engine Ready");
-        }
-
+        // 2. THE LOGIC BRAIN (Pattern Matching)
+        // This replaces the heavy AI with instant logic
         window.sovereign.processInput = async function(text) {
             const status = document.getElementById("status");
+            status.innerText = ">> ANALYZING LOGIC GATE...";
             
-            // Fast Path
-            if (text.toLowerCase() === "status") {
-                speakJarvis("Nano Core active. Memory pressure minimal.");
-                return;
+            const input = text.toLowerCase().trim();
+            let response = "";
+
+            // --- THE CONVERSATION TREE ---
+            if (input.includes("hello") || input.includes("hi")) {
+                response = "Greetings, Enerico. The Logic Core is active.";
+            } 
+            else if (input.includes("status") || input.includes("report")) {
+                response = "Systems nominal. Vortex Engine holding at 98 percent efficiency.";
+            } 
+            else if (input.includes("who are you") || input.includes("identify")) {
+                response = "I am Lumina. A Sovereign Construct designed for Enerico.";
+            } 
+            else if (input.includes("mission") || input.includes("objective")) {
+                response = "My mission is to protect the digital borders of this terminal.";
             }
-
-            // Smart Path
-            if (!engine) {
-                speakJarvis("Calibrating Nano Core. Stand by.");
-                await igniteBrain();
+            else if (input.includes("thank")) {
+                response = "You are welcome, Enerico.";
             }
+            else if (input.includes("weather")) {
+                response = "I do not have atmospheric sensors connected yet, sir.";
+            }
+            else if (input === "jarvis") {
+                response = "I am faster than Jarvis. I am Lumina.";
+            }
+            else {
+                // Fallback for unknown commands
+                const Fallbacks = [
+                    "Command logged, Enerico.",
+                    "Processing input.",
+                    "I am listening.",
+                    "Data received."
+                ];
+                response = Fallbacks[Math.floor(Math.random() * Fallbacks.length)];
+            }
+            // -----------------------------
 
-            status.innerText = ">> CALCULATING...";
-            
-            const systemPrompt = `
-            You are LUMINA (Nano-Version). Concise, fast, loyal.
-            User is 'Enerico'. Keep answers under 15 words.
-            `;
-
-            const messages = [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text }
-            ];
-
-            const reply = await engine.chat.completions.create({ messages });
-            const responseText = reply.choices[0].message.content;
-
+            console.log("LUMINA SAYS:", response);
             status.innerText = ">> RESPONSE SENT";
-            speakJarvis(responseText);
+            speakJarvis(response);
+            
+            // Reset text after 2 seconds
+            setTimeout(() => {
+                status.innerText = ">> LOGIC CORE: ONLINE";
+            }, 2000);
         };
 
+        // Initialization
         window.addEventListener('click', () => {
             if (!hasGreeted) {
-                speakJarvis("Protocol Omega active. Nano Core ready, Enerico.");
+                speakJarvis("Logic Core Online. Welcome back, Enerico.");
                 hasGreeted = true;
-                if (!engine) igniteBrain(); 
+                document.getElementById("status").innerText = ">> LOGIC CORE: ONLINE";
             }
         }, { once: true });
 
     </script>
 </head>
 <body>
-    <div id="status">>> SYSTEM READY. CLICK TO ENGAGE NANO CORE.</div>
+    <div id="status">>> SYSTEM READY. CLICK TO INITIALIZE LOGIC CORE.</div>
     <canvas id="the_canvas_id"></canvas>
 </body>
 </html>
