@@ -1,29 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Jellyjam2 Sovereign Core</title>
+    <title>SOVEREIGN CORE // ENRICO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    
     <style>
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: black; 
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000; 
+            height: 100%;
+            width: 100%;
             overflow: hidden; 
+            font-family: 'Courier New', monospace;
         }
-        /* This is the screen the engine draws on */
-        canvas { 
-            width: 100%; 
-            height: 100%; 
-            display: block; 
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        #status {
+            position: absolute; bottom: 20px; left: 20px;
+            color: #00ffaa; font-size: 14px; z-index: 10;
+            pointer-events: none;
         }
     </style>
-    <!-- The connection to Rust -->
+
     <link data-trunk rel="rust" data-wasm-opt="z" />
+    
+    <script type="module">
+        // === THE SOVEREIGN ARCHITECTURE ===
+        window.sovereign = {};
+
+        // 1. VOICE MODULE (The Mouth)
+        function speakJarvis(text) {
+            if (!window.speechSynthesis) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Find a good voice (Prefer Male/Robotic)
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v => v.name.includes("Google UK English Male")) || voices[0];
+            
+            utterance.voice = preferred;
+            utterance.rate = 1.0; 
+            utterance.pitch = 0.9; // Slightly deeper
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 2. INTELLIGENCE MODULE (The Brain)
+        window.sovereign.processInput = async function(text) {
+            console.log("LUMINA HEARING:", text);
+            const statusEl = document.getElementById("status");
+            statusEl.innerText = "LUMINA: THINKING...";
+
+            // Simple Logic Pattern (Fast Response)
+            let response = "";
+            const input = text.toLowerCase();
+
+            if (input.includes("hello") || input.includes("hi")) {
+                response = "Greetings, Enerico. The system is active.";
+            } else if (input.includes("status")) {
+                response = "Vortex engine running at 100% efficiency. All systems nominal.";
+            } else if (input.includes("who are you")) {
+                response = "I am Lumina, your Sovereign AI Construct.";
+            } else {
+                response = "I have logged that command, Enerico.";
+            }
+
+            // Speak the response
+            speakJarvis(response);
+            statusEl.innerText = "LUMINA: READY";
+        };
+
+        // Initial Greeting on Click (Browsers block auto-audio)
+        window.addEventListener('click', () => {
+            if (!window.hasGreeted) {
+                speakJarvis("Identity confirmed. Welcome back, Enerico.");
+                window.hasGreeted = true;
+            }
+        }, { once: true });
+
+    </script>
 </head>
 <body>
-    <!-- The Engine Mount Point -->
+    <div id="status">>> INITIALIZING NEURAL LINK...</div>
     <canvas id="the_canvas_id"></canvas>
 </body>
 </html>
