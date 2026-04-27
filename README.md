@@ -46,7 +46,7 @@
 
 
 
-\*"The code is the documentation."\*
+\*"The code is the documentation.
 
 
 
