@@ -17,7 +17,7 @@
 
 ---
 
-## 🚀 Live Engine
+##  Live Engine
 
 ### 🔴 [CLICK TO LAUNCH SOVEREIGN CORE](https://jellyjam2.github.io/Jellyjam2/)
 
@@ -30,7 +30,7 @@ A browser-launched Rust / WebAssembly / WebGL interface.
 
 ---
 
-## 🧭 Active Project Map
+##  Active Project Map
 
 | Project | Status | Focus |
 |---|---:|---|
@@ -61,7 +61,7 @@ It is a Rust workspace focused on:
 
 ---
 
-## 🛰️ Sentinel-V
+##  Sentinel-V
 
 [![Repo](https://img.shields.io/badge/Open-Sentinel--V_Waitlist-blue?style=flat-square)](https://github.com/Jellyjam2/sentinel-v-waitlist)
 
@@ -77,7 +77,7 @@ It collects EVM wallet addresses and stores them through a server-side API route
 
 ---
 
-## 🧠 Lumina Experiments
+##  Lumina Experiments
 
 ### Lumina Red Pill
 
@@ -107,7 +107,7 @@ Safety-first concept repository for:
 
 ---
 
-## 🧰 Working Style
+##  Working Style
 
 I build in small, verifiable slices:
 
@@ -141,7 +141,7 @@ Windows PowerShell
 
 ---
 
-## 🏁 Current Milestones
+##  Current Milestones
 
 ```text
 Black Swan v0.1.0                  ✅ Released
