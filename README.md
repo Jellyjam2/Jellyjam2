@@ -2,9 +2,9 @@
 
 # J E L L Y J A M 2
 
-### Rust • Python • TypeScript • WebAssembly • Defensive Systems
+### Senior Systems Architect • Cryptography & Data Security • AWS/Azure Cloud Infrastructure
 
-**Building local-first security tooling, forensic foundations, sovereign interfaces, and practical AI-assisted workflows.**
+**Building security-focused systems, local-first tooling, cloud infrastructure workflows, and practical AI-assisted engineering systems.**
 
 <br />
 
@@ -45,6 +45,8 @@ Focus      Fast local experiments without heavy framework overhead
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5391FE?style=for-the-badge&logo=powershell&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![AWS](https://img.shields.io/badge/Amazon_AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
+![Azure](https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)
 
 </div>
 
@@ -115,7 +117,7 @@ Private experimental systems repositories focused on clear scope, safety-first w
 ```text
 Profile homepage        ✅ Public
 Active systems          🔒 Private by design
-Primary stack           Rust / Python / TypeScript / WASM
+Primary stack           Rust / Python / TypeScript / WASM / AWS / Azure
 Workflow                Inspect → patch → test → PR → release
 Live web entry          Ignite Sovereign Core
 ```
