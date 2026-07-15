@@ -8,7 +8,7 @@
 
 <br />
 
-[![Launch Sovereign Core](https://img.shields.io/badge/LAUNCH-SOVEREIGN_CORE-red?style=for-the-badge&logo=rocket)](https://jellyjam2.github.io/Jellyjam2/)
+[![Ignite Sovereign Core](https://img.shields.io/badge/LAUNCH-SOVEREIGN_CORE-red?style=for-the-badge&logo=rocket)](https://jellyjam2.github.io/Jellyjam2/)
 [![GitHub](https://img.shields.io/badge/GitHub-Jellyjam2-181717?style=for-the-badge&logo=github)](https://github.com/Jellyjam2)
 [![Rust](https://img.shields.io/badge/Rust-Systems-orange?style=for-the-badge&logo=rust)](https://www.rust-lang.org/)
 [![Security](https://img.shields.io/badge/Security-First-black?style=for-the-badge)](https://github.com/Jellyjam2)
@@ -19,7 +19,7 @@
 
 ##  Command Deck
 
-### 🔴 [Launch Sovereign Core](https://jellyjam2.github.io/Jellyjam2/)
+### 🔴 [Ignite Sovereign Core](https://jellyjam2.github.io/Jellyjam2/)
 
 A browser-launched Rust / WebAssembly / WebGL interface for local interface experiments and sovereign cockpit-style workflows.
 
@@ -90,20 +90,20 @@ Core principles:
 [![Repo](https://img.shields.io/badge/Open-Black_Swan-blue?style=flat-square)](https://github.com/Jellyjam2/Black_Swan)
 [![Release](https://img.shields.io/badge/Release-v0.1.0-green?style=flat-square)](https://github.com/Jellyjam2/Black_Swan/releases/tag/v0.1.0)
 
-Rust security foundation focused on authenticated command flow, trust-gated execution, replay protection, append-only storage concepts, deterministic state handling, and defensive system architecture.
+Private Rust security foundation focused on authenticated command flow, trust-gated execution, replay protection, append-only storage concepts, deterministic state handling, and defensive system architecture.
 
 ### Sentinel-V Waitlist
 
 [![Repo](https://img.shields.io/badge/Open-Sentinel--V_Waitlist-blue?style=flat-square)](https://github.com/Jellyjam2/sentinel-v-waitlist)
 
-Next.js / Supabase waitlist app with wallet validation, server-side registration flow, environment template, and SQL migration guidance.
+Private Next.js / Supabase waitlist app with wallet validation, server-side registration flow, environment template, and SQL migration guidance.
 
 ### Lumina Experiments
 
 [![Red Pill](https://img.shields.io/badge/Open-Lumina_Red_Pill-red?style=flat-square)](https://github.com/Jellyjam2/LUMINA-RED-PILL)
 [![System Probing](https://img.shields.io/badge/Open-System_Probing-yellow?style=flat-square)](https://github.com/Jellyjam2/LUMINA-SYSTEM-DEBLOADER-PROBING)
 
-Experimental systems repositories focused on clear scope, safety-first wording, reproducible setup, and responsible technical positioning.
+Private experimental systems repositories focused on clear scope, safety-first wording, reproducible setup, and responsible technical positioning.
 
 ---
 
@@ -135,7 +135,7 @@ GitHub profile homepage                    ✅ Polished
 
 ### Building grounded systems, not empty hype.
 
-[🔴 Launch Sovereign Core](https://jellyjam2.github.io/Jellyjam2/) ·
+[🔴 Ignite Sovereign Core](https://jellyjam2.github.io/Jellyjam2/) ·
 [Black Swan](https://github.com/Jellyjam2/Black_Swan) ·
 [Sentinel-V](https://github.com/Jellyjam2/sentinel-v-waitlist) ·
 [Lumina](https://github.com/Jellyjam2/LUMINA-RED-PILL)
