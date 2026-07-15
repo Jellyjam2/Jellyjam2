@@ -39,20 +39,62 @@
         let hasGreeted = false;
 
         // 1. VOCAL SYNTHESIS (The Voice)
+        let luminaVoices = [];
+
+        function refreshLuminaVoices() {
+            if (!window.speechSynthesis) return [];
+            luminaVoices = window.speechSynthesis.getVoices() || [];
+            return luminaVoices;
+        }
+
+        function selectLuminaVoice() {
+            const voices = luminaVoices.length ? luminaVoices : refreshLuminaVoices();
+
+            const preferredNames = [
+                "Microsoft Aria Online",
+                "Microsoft Jenny Online",
+                "Microsoft Guy Online",
+                "Microsoft Zira",
+                "Microsoft Hazel",
+                "Microsoft David",
+                "Google UK English Female",
+                "Google UK English Male",
+                "Google US English",
+                "Natural"
+            ];
+
+            for (const name of preferredNames) {
+                const match = voices.find(v =>
+                    v.name.toLowerCase().includes(name.toLowerCase())
+                );
+                if (match) return match;
+            }
+
+            return voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en")) || voices[0] || null;
+        }
+
+        refreshLuminaVoices();
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = refreshLuminaVoices;
+        }
+
         function speakJarvis(text) {
             if (!window.speechSynthesis) return;
+
             window.speechSynthesis.cancel();
-            
+
             const msg = new SpeechSynthesisUtterance(text);
-            const voices = window.speechSynthesis.getVoices();
-            // Try to find a robotic/deep voice
-            const voice = voices.find(v => v.name.includes("Google UK English Male")) || 
-                          voices.find(v => v.name.includes("English United Kingdom")) || 
-                          voices[0];
-            
-            msg.voice = voice;
-            msg.rate = 1.0;
-            msg.pitch = 0.9; 
+            const voice = selectLuminaVoice();
+
+            if (voice) {
+                msg.voice = voice;
+            }
+
+            msg.rate = 0.92;
+            msg.pitch = 0.82;
+            msg.volume = 1.0;
+
             window.speechSynthesis.speak(msg);
         }
 
@@ -67,19 +109,19 @@
 
             // --- THE CONVERSATION TREE ---
             if (input.includes("hello") || input.includes("hi")) {
-                response = "Greetings, Enerico. The Logic Core is active.";
+                response = "Greetings, Enrico. The Logic Core is active.";
             } 
             else if (input.includes("status") || input.includes("report")) {
                 response = "Systems nominal. Vortex Engine holding at 98 percent efficiency.";
             } 
             else if (input.includes("who are you") || input.includes("identify")) {
-                response = "I am Lumina. A Sovereign Construct designed for Enerico.";
+                response = "I am Lumina. A Sovereign Construct designed for Enrico.";
             } 
             else if (input.includes("mission") || input.includes("objective")) {
                 response = "My mission is to protect the digital borders of this terminal.";
             }
             else if (input.includes("thank")) {
-                response = "You are welcome, Enerico.";
+                response = "You are welcome, Enrico.";
             }
             else if (input.includes("weather")) {
                 response = "I do not have atmospheric sensors connected yet, sir.";
@@ -90,7 +132,7 @@
             else {
                 // Fallback for unknown commands
                 const Fallbacks = [
-                    "Command logged, Enerico.",
+                    "Command logged, Enrico.",
                     "Processing input.",
                     "I am listening.",
                     "Data received."
@@ -112,7 +154,7 @@
         // Initialization
         window.addEventListener('click', () => {
             if (!hasGreeted) {
-                speakJarvis("Logic Core Online. Welcome back, Enerico.");
+                speakJarvis("Logic Core Online. Welcome back, Enrico.");
                 hasGreeted = true;
                 document.getElementById("status").innerText = ">> LOGIC CORE: ONLINE";
             }
