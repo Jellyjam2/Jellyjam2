@@ -79,7 +79,35 @@
             window.speechSynthesis.onvoiceschanged = refreshLuminaVoices;
         }
 
-        function speakJarvis(text) {
+        async function speakLuminaPremium(text) {
+            try {
+                const response = await fetch("http://127.0.0.1:8787/speak", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Premium voice proxy unavailable");
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+
+                audio.onended = () => URL.revokeObjectURL(audioUrl);
+                await audio.play();
+
+                return true;
+            } catch (error) {
+                console.warn("Premium voice unavailable, falling back to native browser voice:", error);
+                return false;
+            }
+        }
+        async function speakJarvis(text) {
+            if (await speakLuminaPremium(text)) return;
             if (!window.speechSynthesis) return;
 
             window.speechSynthesis.cancel();
