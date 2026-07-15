@@ -126,59 +126,94 @@
             window.speechSynthesis.speak(msg);
         }
 
-        // 2. THE LOGIC BRAIN (Pattern Matching)
-        // This replaces the heavy AI with instant logic
+        // 2. THE LUMINA AI CORE
+        async function askLuminaBrain(text) {
+            try {
+                const response = await fetch("http://127.0.0.1:8788/think", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Lumina AI core unavailable");
+                }
+
+                const data = await response.json();
+                return data.reply || null;
+            } catch (error) {
+                console.warn("Lumina AI core unavailable. Using local fallback:", error);
+                return null;
+            }
+        }
+
+        function localLuminaFallback(input) {
+            if (input.includes("hello") || input.includes("hi")) {
+                return "Lumina online. Local core active. Hello, Enrico.";
+            }
+
+            if (input.includes("status") || input.includes("report")) {
+                return "Local systems nominal. Neural core unavailable, but the cockpit remains operational.";
+            }
+
+            if (input.includes("who are you") || input.includes("identify")) {
+                return "I am Lumina. A local-first sovereign cockpit interface built for Enrico.";
+            }
+
+            if (input.includes("mission") || input.includes("objective")) {
+                return "Mission profile: assist, protect clarity, accelerate engineering, and keep the command path disciplined.";
+            }
+
+            if (input.includes("scan")) {
+                return "Surface scan complete. No hostile logic detected in local command space.";
+            }
+
+            if (input.includes("overdrive")) {
+                return "Overdrive acknowledged. Visual core remains stable. Command discipline recommended.";
+            }
+
+            if (input.includes("thank")) {
+                return "Acknowledged, Enrico. Standing by.";
+            }
+
+            const fallbacks = [
+                "Command received. Neural core is offline, but local logic remains ready.",
+                "Logged. Bring the neural core online for full intelligence mode.",
+                "Local mode response complete. Awaiting next command.",
+                "Signal captured. Cockpit remains active."
+            ];
+
+            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        }
+
         window.sovereign.processInput = async function(text) {
             const status = document.getElementById("status");
-            status.innerText = ">> ANALYZING LOGIC GATE...";
-            
-            const input = text.toLowerCase().trim();
-            let response = "";
+            const rawInput = text.trim();
 
-            // --- THE CONVERSATION TREE ---
-            if (input.includes("hello") || input.includes("hi")) {
-                response = "Greetings, Enrico. The Logic Core is active.";
-            } 
-            else if (input.includes("status") || input.includes("report")) {
-                response = "Systems nominal. Vortex Engine holding at 98 percent efficiency.";
-            } 
-            else if (input.includes("who are you") || input.includes("identify")) {
-                response = "I am Lumina. A Sovereign Construct designed for Enrico.";
-            } 
-            else if (input.includes("mission") || input.includes("objective")) {
-                response = "My mission is to protect the digital borders of this terminal.";
+            if (!rawInput) return;
+
+            status.innerText = ">> LUMINA NEURAL CORE: THINKING...";
+
+            let response = await askLuminaBrain(rawInput);
+
+            if (!response) {
+                status.innerText = ">> LOCAL LOGIC FALLBACK: ACTIVE";
+                response = localLuminaFallback(rawInput.toLowerCase());
             }
-            else if (input.includes("thank")) {
-                response = "You are welcome, Enrico.";
-            }
-            else if (input.includes("weather")) {
-                response = "I do not have atmospheric sensors connected yet, sir.";
-            }
-            else if (input === "jarvis") {
-                response = "I am faster than Jarvis. I am Lumina.";
-            }
-            else {
-                // Fallback for unknown commands
-                const Fallbacks = [
-                    "Command logged, Enrico.",
-                    "Processing input.",
-                    "I am listening.",
-                    "Data received."
-                ];
-                response = Fallbacks[Math.floor(Math.random() * Fallbacks.length)];
-            }
-            // -----------------------------
 
             console.log("LUMINA SAYS:", response);
-            status.innerText = ">> RESPONSE SENT";
-            speakJarvis(response);
-            
-            // Reset text after 2 seconds
-            setTimeout(() => {
-                status.innerText = ">> LOGIC CORE: ONLINE";
-            }, 2000);
-        };
 
+            const shortStatus = response.length > 90 ? response.slice(0, 90) + "..." : response;
+            status.innerText = ">> " + shortStatus.toUpperCase();
+
+            await speakJarvis(response);
+
+            setTimeout(() => {
+                status.innerText = ">> LUMINA CORE: ONLINE";
+            }, 3500);
+        };
         // Initialization
         window.addEventListener('click', () => {
             if (!hasGreeted) {
