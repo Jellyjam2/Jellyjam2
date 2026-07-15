@@ -52,14 +52,17 @@ Focus      Fast local experiments without heavy framework overhead
 
 ##  Active Systems Map
 
+> Most active repositories are private by design. Links are kept as an owner-facing systems index; public visitors may see GitHub 404 pages.
+
 | Project | Status | Focus |
 |---|---:|---|
-| [Black Swan](https://github.com/Jellyjam2/Black_Swan) | `v0.1.0 released` | Rust security foundation, forensic integrity, auditability |
-| [Sentinel-V Waitlist](https://github.com/Jellyjam2/sentinel-v-waitlist) | `setup cleaned` | Next.js + Supabase waitlist with safer env/docs flow |
-| [Lumina Red Pill](https://github.com/Jellyjam2/LUMINA-RED-PILL) | `demo clarified` | Experimental systems wrapper with responsible benchmark notes |
-| [Lumina System Debloader & Probing](https://github.com/Jellyjam2/LUMINA-SYSTEM-DEBLOADER-PROBING) | `safety scoped` | Windows diagnostic/probing concept and dry-run maintenance design |
-| [Titan Black Swan 3.0](https://github.com/Jellyjam2/TitanBlackSwan_3_0) | `engineering archive` | Titan security, vault, storage, and system foundation workspace |
-| Vapor Sentinel | `private checkpoint` | Rust defensive research foundation with CI and cargo-audit hygiene |
+| [Black Swan](https://github.com/Jellyjam2/Black_Swan) | `private / v0.1.0` | Rust security foundation, forensic integrity, auditability |
+| [Sentinel-V Waitlist](https://github.com/Jellyjam2/sentinel-v-waitlist) | `private / setup cleaned` | Next.js + Supabase waitlist with safer env/docs flow |
+| [Lumina Red Pill](https://github.com/Jellyjam2/LUMINA-RED-PILL) | `private / demo clarified` | Experimental systems wrapper with responsible benchmark notes |
+| [Lumina System Debloader & Probing](https://github.com/Jellyjam2/LUMINA-SYSTEM-DEBLOADER-PROBING) | `private / safety scoped` | Windows diagnostic/probing concept and dry-run maintenance design |
+| [Titan Black Swan 3.0](https://github.com/Jellyjam2/TitanBlackSwan_3_0) | `private / engineering archive` | Titan security, vault, storage, and system foundation workspace |
+| [Vapor Sentinel](https://github.com/Jellyjam2/vapor-sentinel-) | `private / checkpoint` | Rust defensive research foundation with CI and cargo-audit hygiene |
+| [Lumina Engine v1.1.1](https://github.com/Jellyjam2/Lumina_Engine_v1.1.1) | `private / source vault` | Proprietary Rust logic, AVX2 math core, and admin manifest workspace |
 
 ---
 
@@ -83,7 +86,7 @@ Core principles:
 
 ---
 
-##  Public Foundations
+##  Private Systems Index
 
 ### Black Swan
 
@@ -107,14 +110,15 @@ Private experimental systems repositories focused on clear scope, safety-first w
 
 ---
 
-##  GitHub Signal
+##  Build Signal
 
-<div align="center">
-
-<img height="165" src="https://github-readme-stats.vercel.app/api?username=Jellyjam2&show_icons=true&theme=tokyonight&hide_border=true&include_all_commits=true&count_private=true" />
-<img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Jellyjam2&layout=compact&theme=tokyonight&hide_border=true" />
-
-</div>
+```text
+Profile homepage        ✅ Public
+Active systems          🔒 Private by design
+Primary stack           Rust / Python / TypeScript / WASM
+Workflow                Inspect → patch → test → PR → release
+Live web entry          Ignite Sovereign Core
+```
 
 ---
 
@@ -126,6 +130,7 @@ Sentinel-V Waitlist setup/docs             ✅ Cleaned
 Lumina Red Pill README                     ✅ Credibility clarified
 Lumina System Probing README               ✅ Safety clarified
 Vapor Sentinel private foundation          ✅ Tagged + released privately
+Lumina Engine v1.1.1 private vault        ✅ Indexed
 GitHub profile homepage                    ✅ Polished
 ```
 
