@@ -17,7 +17,7 @@
 
 ---
 
-## ⚡ Command Deck
+##  Command Deck
 
 ### 🔴 [Launch Sovereign Core](https://jellyjam2.github.io/Jellyjam2/)
 
@@ -32,7 +32,7 @@ Focus      Fast local experiments without heavy framework overhead
 
 ---
 
-## 🧰 Tech Stack
+##  Tech Stack
 
 <div align="center">
 
@@ -50,7 +50,7 @@ Focus      Fast local experiments without heavy framework overhead
 
 ---
 
-## 🛰️ Active Systems Map
+##  Active Systems Map
 
 | Project | Status | Focus |
 |---|---:|---|
@@ -63,7 +63,7 @@ Focus      Fast local experiments without heavy framework overhead
 
 ---
 
-## 🛡️ Engineering Direction
+##  Engineering Direction
 
 I build systems around a few simple rules:
 
@@ -83,7 +83,7 @@ Core principles:
 
 ---
 
-## 🔥 Public Foundations
+##  Public Foundations
 
 ### Black Swan
 
@@ -107,7 +107,7 @@ Experimental systems repositories focused on clear scope, safety-first wording, 
 
 ---
 
-## 📊 GitHub Signal
+##  GitHub Signal
 
 <div align="center">
 
@@ -118,7 +118,7 @@ Experimental systems repositories focused on clear scope, safety-first wording, 
 
 ---
 
-## ✅ Current Checkpoints
+##  Current Checkpoints
 
 ```text
 Black Swan v0.1.0                         ✅ Released
