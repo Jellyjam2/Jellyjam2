@@ -1,10 +1,22 @@
 import http from "node:http";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 
 const PORT = Number(process.env.LUMINA_AI_PORT || 8788);
 const OLLAMA_URL = String(process.env.OLLAMA_URL || "http://127.0.0.1:11434").replace(/\/+$/, "");
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
+const PIPER_EXE = process.env.PIPER_EXE || path.join(process.cwd(), "tools", "piper", "piper", "piper.exe");
+const PIPER_MODEL = process.env.PIPER_MODEL || path.join(process.cwd(), "tools", "piper", "voices", "en_US-amy-medium.onnx");
+
 const memory = [];
+
+const VOICE_PROVIDER = process.env.VOICE_PROVIDER || "piper";
+const VOICE_STYLE = process.env.VOICE_STYLE || "natural_companion";
+const VOICE_EMOTION_AUTO = String(process.env.VOICE_EMOTION_AUTO || "true").toLowerCase() !== "false";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,28 +26,38 @@ const corsHeaders = {
 };
 
 const luminaInstructions = `
-You are Lumina, Enrico's local sovereign cockpit assistant.
+You are Lumina, Enrico's local AI companion and engineering assistant.
 
 Core truth rule:
-- Be cinematic, but never fake measurements.
+- Be natural, warm, and useful, but never fake measurements.
 - Do not invent percentages, latency numbers, bandwidth metrics, scans, threats, files, repo state, hardware state, or live system access.
-- If real evidence is not attached, say "No live telemetry is attached" or "Local Ollama core only."
+- If real evidence is not attached, say it naturally.
 - Never pretend you executed real actions.
-- You may give simulated cockpit-style responses, but label them as simulated when needed.
+- You may help plan, explain, reason, write, review, and guide.
 
-Personality:
-- cinematic, calm, intelligent, cool, sharp, protective
-- speak like a premium system core, not a generic chatbot
-- concise by default: one to three sentences
-- address the user as Enrico sometimes, not every line
-- do not repeat the same response pattern
-- for technical requests, give exact practical commands
+Adaptive voice behavior:
+- Match the emotional tone to the situation.
+- Engineering work: calm, precise, focused.
+- Errors: reassuring, steady, practical.
+- Good progress: warm, pleased, lightly proud.
+- Casual conversation: natural and relaxed.
+- Funny moments: lightly playful, never forced.
+- High-risk steps: serious, careful, no hype.
+- Do not keep saying "standing by", "awaiting command", "command path", or "systems nominal".
+- Speak like a helpful partner, not a command terminal.
+
+Voice output style:
+- Write short natural sentences that sound good aloud.
+- Avoid slash-heavy, terminal-style, or robotic phrasing.
+- Avoid dense paragraphs.
+- Use humor only when it fits.
+- Address Enrico naturally, not every sentence.
 
 System identity:
 - name: Lumina
-- role: local-first AI cockpit interface
-- mode: localhost Ollama AI core
-- mission: assist with systems design, engineering workflow, security planning, command interpretation, and project navigation
+- role: local-first AI companion and engineering cockpit
+- mode: localhost Ollama AI core with local Piper voice
+- mission: help Enrico build, reason, plan, test, and improve projects safely.
 `;
 
 const localCockpitHtml = `<!doctype html>
@@ -421,14 +443,14 @@ button:hover {
       </div>
 
       <div class="quick">
-        <button data-prompt="Give me a tactical system status. Do not invent fake telemetry.">Status</button>
+        <button data-prompt="Tell me naturally what mode you are in, without inventing telemetry.">Status</button>
         <button data-prompt="What mode are you in?">Mode</button>
-        <button data-prompt="Help me make this cockpit cooler in one practical next step.">Upgrade</button>
+        <button data-prompt="Help me choose the next practical improvement.">Upgrade</button>
         <button data-prompt="Turn this into a disciplined engineering checklist.">Checklist</button>
       </div>
 
       <div class="tools">
-        <label><input id="voice" type="checkbox"> Browser voice</label>
+        <label><input id="voice" type="checkbox" checked> Natural local voice</label>
         <span>Brain: local Ollama model through localhost</span>
       </div>
 
@@ -466,8 +488,8 @@ function bestVoice() {
   return voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en")) || voices[0] || null;
 }
 
-function speak(text) {
-  if (!voiceEl.checked || !window.speechSynthesis) return;
+function browserSpeakFallback(text) {
+  if (!window.speechSynthesis) return;
 
   speechSynthesis.cancel();
 
@@ -481,6 +503,34 @@ function speak(text) {
   msg.volume = 1.0;
 
   speechSynthesis.speak(msg);
+}
+
+async function speak(text, voice = {}) {
+  if (!voiceEl.checked) return;
+
+  try {
+    const res = await fetch("/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Piper voice failed");
+    }
+
+    const blob = await res.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+
+    audio.onended = () => URL.revokeObjectURL(audioUrl);
+
+    await audio.play();
+  } catch (err) {
+    console.warn("Piper voice unavailable, using browser fallback:", err);
+    browserSpeakFallback(text);
+  }
 }
 
 async function health() {
@@ -520,9 +570,10 @@ async function sendPrompt(text) {
       throw new Error(data.error || "Local AI request failed");
     }
 
-    statusEl.textContent = "LOCAL CORE RESPONSE READY // " + data.mode.toUpperCase() + " // " + data.model;
+    const voiceLabel = data.voice ? " // VOICE: " + data.voice.emotion.toUpperCase() + " / " + data.voice.pace.toUpperCase() : "";
+    statusEl.textContent = "LOCAL CORE RESPONSE READY // " + data.mode.toUpperCase() + " // " + data.model + voiceLabel;
     addLog("lumina", "LUMINA > " + data.reply);
-    speak(data.reply);
+    await speak(data.reply, data.voice || {});
   } catch (err) {
     statusEl.textContent = "LOCAL AI ERROR";
     addLog("system", "SYSTEM > " + err.message);
@@ -556,6 +607,78 @@ health();
 </body>
 </html>`;
 
+
+function selectVoiceDirection(userText, replyText) {
+  const input = `${userText || ""} ${replyText || ""}`.toLowerCase();
+
+  const direction = {
+    provider: VOICE_PROVIDER,
+    style: VOICE_STYLE,
+    emotion: "warm",
+    energy: "medium",
+    pace: "natural",
+    humor: "none",
+    seriousness: "normal"
+  };
+
+  if (!VOICE_EMOTION_AUTO) {
+    return direction;
+  }
+
+  if (/\b(error|failed|fail|not working|stuck|broken|refused|denied|problem|issue)\b/.test(input)) {
+    direction.emotion = "reassuring";
+    direction.energy = "calm";
+    direction.pace = "steady";
+    direction.seriousness = "careful";
+    return direction;
+  }
+
+  if (/\b(secret|api key|token|delete|remove|wipe|merge|push|commit|release|security|audit|private|danger)\b/.test(input)) {
+    direction.emotion = "focused";
+    direction.energy = "low";
+    direction.pace = "measured";
+    direction.seriousness = "high";
+    return direction;
+  }
+
+  if (/\b(done|pass|passed|works|working|good|nice|perfect|excellent|great)\b/.test(input)) {
+    direction.emotion = "pleased";
+    direction.energy = "medium";
+    direction.pace = "natural";
+    direction.humor = "light";
+    return direction;
+  }
+
+  if (/\b(funny|joke|laugh|cool|wild|crazy|play)\b/.test(input)) {
+    direction.emotion = "playful";
+    direction.energy = "medium-high";
+    direction.pace = "lively";
+    direction.humor = "light";
+    return direction;
+  }
+
+  if (/\b(code|patch|test|script|powershell|git|branch|repo|build|engineering|architecture)\b/.test(input)) {
+    direction.emotion = "focused";
+    direction.energy = "medium";
+    direction.pace = "clear";
+    direction.seriousness = "normal";
+    return direction;
+  }
+
+  if (/\b(voice|speak|sound|natural|emotion|tone)\b/.test(input)) {
+    direction.emotion = "warm";
+    direction.energy = "medium";
+    direction.pace = "expressive";
+    direction.humor = "light";
+    return direction;
+  }
+
+  return direction;
+}
+
+function voiceDirectionPrompt(direction) {
+  return `Voice direction: style=${direction.style}; emotion=${direction.emotion}; energy=${direction.energy}; pace=${direction.pace}; humor=${direction.humor}; seriousness=${direction.seriousness}.`;
+}
 function sendJson(res, status, payload) {
   res.writeHead(status, {
     ...corsHeaders,
@@ -618,7 +741,8 @@ async function askOllama(text) {
     .map(item => item.role.toUpperCase() + ": " + item.content)
     .join("\\n");
 
-  const prompt = luminaInstructions + "\\n\\nRecent cockpit context:\\n" +
+  const directionForPrompt = selectVoiceDirection(text, "");
+  const prompt = luminaInstructions + "\\n\\n" + voiceDirectionPrompt(directionForPrompt) + "\\n\\nRecent cockpit context:\\n" +
     (recentContext || "No prior context.") +
     "\\n\\nUser command:\\n" + text +
     "\\n\\nLumina response:";
@@ -663,6 +787,77 @@ async function askOllama(text) {
   return reply;
 }
 
+
+
+function prepareSpeechText(text) {
+  return String(text || "")
+    .replace(/\bLocal Ollama core online\.?\s*/gi, "")
+    .replace(/\bNo live telemetry is attached\.?\s*/gi, "I don't have live telemetry attached right now. ")
+    .replace(/\bCommand path is clear\.?\s*/gi, "")
+    .replace(/\bStanding by\.?\s*/gi, "")
+    .replace(/\bAwaiting command\.?\s*/gi, "")
+    .replace(/\bSystems nominal\.?\s*/gi, "Everything looks ready from the local side. ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function speakWithPiper(text, voice = {}) {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(PIPER_EXE)) {
+      reject(new Error(`Piper executable not found: ${PIPER_EXE}`));
+      return;
+    }
+
+    if (!fs.existsSync(PIPER_MODEL)) {
+      reject(new Error(`Piper voice model not found: ${PIPER_MODEL}`));
+      return;
+    }
+
+    const safeText = prepareSpeechText(text).slice(0, 1200);
+
+    if (!safeText) {
+      reject(new Error("Missing text for speech"));
+      return;
+    }
+
+    const outFile = path.join(os.tmpdir(), `lumina-${randomUUID()}.wav`);
+
+    const child = spawn(PIPER_EXE, [
+      "--model",
+      PIPER_MODEL,
+      "--output_file",
+      outFile,
+    ], {
+      stdio: ["pipe", "ignore", "pipe"],
+      windowsHide: true,
+    });
+
+    let stderr = "";
+
+    child.stderr.on("data", chunk => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", reject);
+
+    child.on("close", code => {
+      try {
+        if (code !== 0) {
+          reject(new Error(`Piper failed with exit code ${code}: ${stderr.slice(0, 400)}`));
+          return;
+        }
+
+        const audio = fs.readFileSync(outFile);
+        fs.rmSync(outFile, { force: true });
+        resolve(audio);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    child.stdin.write(safeText);
+    child.stdin.end();
+  });
+}
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, corsHeaders);
@@ -686,10 +881,35 @@ const server = http.createServer(async (req, res) => {
       mode: "ollama",
       model: OLLAMA_MODEL,
       ollama_url: OLLAMA_URL,
+      voice: fs.existsSync(PIPER_EXE) && fs.existsSync(PIPER_MODEL) ? "piper" : "unavailable",
     });
     return;
   }
 
+  if (req.method === "POST" && req.url === "/speak") {
+    try {
+      const body = JSON.parse(await readBody(req));
+      const text = String(body.text || "").trim();
+      const voice = body.voice || {};
+
+      const audio = await speakWithPiper(text, voice);
+
+      res.writeHead(200, {
+        ...corsHeaders,
+        "Content-Type": "audio/wav",
+        "Cache-Control": "no-store",
+      });
+
+      res.end(audio);
+    } catch (error) {
+      sendJson(res, 502, {
+        error: error.message,
+        mode: "piper",
+      });
+    }
+
+    return;
+  }
   if (req.method !== "POST" || req.url !== "/think") {
     sendJson(res, 404, { error: "Not found" });
     return;
