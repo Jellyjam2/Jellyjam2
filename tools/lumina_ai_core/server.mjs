@@ -936,11 +936,13 @@ const server = http.createServer(async (req, res) => {
     while (memory.length > 12) {
       memory.shift();
     }
+    const voice = selectVoiceDirection(text, reply);
 
     sendJson(res, 200, {
       reply,
       mode: "ollama",
       model: OLLAMA_MODEL,
+      voice,
     });
   } catch (error) {
     sendJson(res, 502, {
