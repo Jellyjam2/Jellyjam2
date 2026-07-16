@@ -194,13 +194,13 @@
 
             if (!rawInput) return;
 
-            status.innerText = ">> LUMINA NEURAL CORE: THINKING...";
+            status.innerText = ">> LOCAL AI CORE: THINKING...";
 
             let brain = await askLuminaBrain(rawInput);
             let response = brain ? brain.reply : null;
 
             if (!response) {
-                status.innerText = ">> LOCAL LOGIC FALLBACK: ACTIVE";
+                status.innerText = ">> SCRIPT FALLBACK: LOCAL AI CORE OFFLINE";
                 response = localLuminaFallback(rawInput.toLowerCase());
             }
 
