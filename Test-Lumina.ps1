@@ -26,11 +26,19 @@ $body = @{
   text = "Lumina, confirm local mode in one honest tactical sentence. Do not invent fake telemetry."
 } | ConvertTo-Json
 
-Invoke-RestMethod `
+$result = Invoke-RestMethod `
   -Uri "http://127.0.0.1:$env:LUMINA_AI_PORT/think" `
   -Method POST `
   -ContentType "application/json" `
   -Body $body `
-  -TimeoutSec 180 | Format-List
+  -TimeoutSec 180
 
-Write-Host "`n[PASS] Lumina local AI core responded."
+$result | Format-List
+
+$forbidden = '(?i)\b\d+(\.\d+)?\s*%|\b100\s*percent\b|\bhealth\s*(is|at|=)\s*\d+|\blatency\b|\bbandwidth\b|\bthreat\s+scan\b|\bscan\s+complete\b|\bdetected\b|\boptimized\b'
+
+if ($result.reply -match $forbidden) {
+  throw "Truth guard failed. Lumina invented telemetry: $($result.reply)"
+}
+
+Write-Host "`n[PASS] Lumina local AI core responded without fake telemetry."
