@@ -955,12 +955,25 @@ async function synthesizeSpeech(text, voice = {}) {
     };
   }
 
-  if (status.requested === "openai" || status.requested === "elevenlabs") {
-    throw new Error(`Voice provider '${status.requested}' is selected, but the premium adapter is not enabled yet. Use VOICE_PROVIDER=piper for now.`);
+  if (status.active === "openai") {
+    const audio = await speakWithOpenAi(text, voice);
+
+    return {
+      audio,
+      provider: "openai",
+      requestedProvider: status.requested,
+      fallback: false,
+      contentType: audioContentType(OPENAI_TTS_FORMAT)
+    };
+  }
+
+  if (status.requested === "elevenlabs") {
+    throw new Error("ElevenLabs adapter is not implemented yet. Use VOICE_PROVIDER=piper or VOICE_PROVIDER=openai when configured.");
   }
 
   throw new Error("No usable voice provider is available.");
 }
+
 function speakWithPiper(text, voice = {}) {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(PIPER_EXE)) {
