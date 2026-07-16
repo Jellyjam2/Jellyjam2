@@ -614,6 +614,149 @@ if (window.speechSynthesis) {
 
 health();
 </script>
+
+<style id="lumina-voice-badge-style">
+  #lumina-voice-badge {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    width: min(330px, calc(100vw - 32px));
+    padding: 12px 14px;
+    border: 1px solid rgba(125, 220, 255, 0.35);
+    border-radius: 14px;
+    background: rgba(5, 10, 18, 0.82);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 24px rgba(0, 180, 255, 0.18);
+    color: #dff7ff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  #lumina-voice-badge .lvb-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #ffffff;
+  }
+
+  #lumina-voice-badge .lvb-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 4px 0;
+  }
+
+  #lumina-voice-badge .lvb-row span {
+    opacity: 0.72;
+  }
+
+  #lumina-voice-badge .lvb-row strong {
+    text-align: right;
+    color: #8ee9ff;
+    font-weight: 700;
+  }
+</style>
+
+<div id="lumina-voice-badge" aria-live="polite">
+  <div class="lvb-title">Voice Mode</div>
+  <div class="lvb-row"><span>Voice</span><strong id="lvb-active">checking</strong></div>
+  <div class="lvb-row"><span>Requested</span><strong id="lvb-requested">checking</strong></div>
+  <div class="lvb-row"><span>Fallback</span><strong id="lvb-fallback">checking</strong></div>
+  <div class="lvb-row"><span>Premium</span><strong id="lvb-premium">checking</strong></div>
+  <div class="lvb-row"><span>Emotion</span><strong id="lvb-emotion">waiting</strong></div>
+</div>
+
+<script id="lumina-voice-badge-script">
+(function () {
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function setText(id, value) {
+    var el = byId(id);
+    if (el) {
+      el.textContent = value || "unknown";
+    }
+  }
+
+  function labelProvider(value) {
+    if (value === "piper") return "Piper Local";
+    if (value === "openai") return "OpenAI Premium";
+    if (value === "elevenlabs") return "ElevenLabs Premium";
+    if (value === "unavailable") return "Unavailable";
+    return value || "unknown";
+  }
+
+  function updateHealthBadge(health) {
+    var provider = health.voice_provider || {};
+    var premium = provider.premium_voice || {};
+    var openai = premium.openai || {};
+
+    setText("lvb-active", labelProvider(provider.active || health.voice));
+    setText("lvb-requested", labelProvider(provider.requested || provider.active || health.voice));
+
+    if (provider.active && provider.requested && provider.active !== provider.requested) {
+      setText("lvb-fallback", "Safe fallback");
+    } else {
+      setText("lvb-fallback", "none");
+    }
+
+    if (openai.enabled) {
+      setText("lvb-premium", "OpenAI active");
+    } else if (openai.adapter === "openai_tts") {
+      setText("lvb-premium", "OpenAI ready");
+    } else {
+      setText("lvb-premium", "inactive");
+    }
+  }
+
+  function updateVoiceBadge(voice) {
+    if (!voice) return;
+
+    var emotion = voice.emotion || "warm";
+    var pace = voice.pace || "natural";
+
+    setText("lvb-emotion", emotion + " / " + pace);
+  }
+
+  async function refreshHealthBadge() {
+    try {
+      var response = await fetch("/health", { cache: "no-store" });
+      var health = await response.json();
+      updateHealthBadge(health);
+    } catch (error) {
+      setText("lvb-active", "offline");
+      setText("lvb-fallback", "unknown");
+    }
+  }
+
+  var originalFetch = window.fetch.bind(window);
+
+  window.fetch = async function () {
+    var response = await originalFetch.apply(this, arguments);
+
+    try {
+      var target = arguments[0];
+      var url = String(target && target.url ? target.url : target);
+
+      if (url.indexOf("/think") !== -1) {
+        response.clone().json().then(function (data) {
+          if (data && data.voice) {
+            updateVoiceBadge(data.voice);
+          }
+        }).catch(function () {});
+      }
+    } catch (error) {}
+
+    return response;
+  };
+
+  refreshHealthBadge();
+  setInterval(refreshHealthBadge, 10000);
+})();
+</script>
 </body>
 </html>`;
 
@@ -1139,4 +1282,5 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log("[LUMINA AI] Ollama URL: " + OLLAMA_URL);
   console.log("[LUMINA AI] Ollama model: " + OLLAMA_MODEL);
 });
+
 
