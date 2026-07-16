@@ -588,6 +588,30 @@ function cleanReply(text) {
     .replace(/^["'“”]+|["'“”]+$/g, "");
 }
 
+
+function violatesTruthRule(text) {
+  const value = String(text || "");
+
+  const forbiddenPatterns = [
+    /\b\d+(\.\d+)?\s*%/,
+    /\b100\s*percent\b/i,
+    /\bhealth\s*(is|at|=)\s*\d+/i,
+    /\blatency\b/i,
+    /\bbandwidth\b/i,
+    /\bthreat\s+scan\b/i,
+    /\bscan\s+complete\b/i,
+    /\bhostiles?\b/i,
+    /\ballies?\b/i,
+    /\bdetected\b/i,
+    /\boptimized\b/i
+  ];
+
+  return forbiddenPatterns.some(pattern => pattern.test(value));
+}
+
+function safeTruthReply() {
+  return "Local Ollama core online. No live telemetry is attached. I can reason over provided data, but I will not invent health, latency, threat, or bandwidth metrics.";
+}
 async function askOllama(text) {
   const recentContext = memory
     .slice(-8)
@@ -680,7 +704,11 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const reply = await askOllama(text);
+    let reply = await askOllama(text);
+
+    if (violatesTruthRule(reply)) {
+      reply = safeTruthReply();
+    }
 
     memory.push({ role: "user", content: text });
     memory.push({ role: "assistant", content: reply });
