@@ -19,6 +19,11 @@ const VOICE_STYLE = process.env.VOICE_STYLE || "natural_companion";
 const VOICE_EMOTION_AUTO = String(process.env.VOICE_EMOTION_AUTO || "true").toLowerCase() !== "false";
 const VOICE_PROVIDER_FALLBACK = process.env.VOICE_PROVIDER_FALLBACK || "piper";
 
+const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || "";
+const OPENAI_TTS_VOICE = process.env.OPENAI_TTS_VOICE || "";
+const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || "";
+const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -816,10 +821,30 @@ function piperAvailable() {
   return fs.existsSync(PIPER_EXE) && fs.existsSync(PIPER_MODEL);
 }
 
+
+function premiumVoiceProviderStatus() {
+  return {
+    openai: {
+      adapter: "stub",
+      enabled: false,
+      configured: Boolean(process.env.OPENAI_API_KEY),
+      model: OPENAI_TTS_MODEL || "not_configured",
+      voice: OPENAI_TTS_VOICE || "not_configured"
+    },
+    elevenlabs: {
+      adapter: "stub",
+      enabled: false,
+      configured: Boolean(process.env.ELEVENLABS_API_KEY),
+      model: ELEVENLABS_MODEL_ID || "not_configured",
+      voice_id: ELEVENLABS_VOICE_ID || "not_configured"
+    }
+  };
+}
 function voiceProviderStatus() {
   const requested = normalizeVoiceProvider(VOICE_PROVIDER);
   const fallback = normalizeVoiceProvider(VOICE_PROVIDER_FALLBACK);
   const piper_ready = piperAvailable();
+  const premium = premiumVoiceProviderStatus();
 
   let active = requested;
 
@@ -836,7 +861,8 @@ function voiceProviderStatus() {
     active,
     fallback,
     piper_ready,
-    premium_ready: false
+    premium_ready: premium.openai.configured || premium.elevenlabs.configured,
+    premium_voice: premium
   };
 }
 
