@@ -34,3 +34,4 @@ Write-Host "[OK] Premium status."
 Write-Host "[OK] OpenAI function and routing."
 Write-Host "[OK] Safe fallback behavior."
 Write-Host "[OK] Live OpenAI guard skips safely unless explicitly configured."
+
