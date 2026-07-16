@@ -17,6 +17,7 @@ const memory = [];
 const VOICE_PROVIDER = process.env.VOICE_PROVIDER || "piper";
 const VOICE_STYLE = process.env.VOICE_STYLE || "natural_companion";
 const VOICE_EMOTION_AUTO = String(process.env.VOICE_EMOTION_AUTO || "true").toLowerCase() !== "false";
+const VOICE_PROVIDER_FALLBACK = process.env.VOICE_PROVIDER_FALLBACK || "piper";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -800,6 +801,66 @@ function prepareSpeechText(text) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+function normalizeVoiceProvider(provider) {
+  const value = String(provider || "piper").trim().toLowerCase();
+
+  if (value === "piper" || value === "openai" || value === "elevenlabs") {
+    return value;
+  }
+
+  return "piper";
+}
+
+function piperAvailable() {
+  return fs.existsSync(PIPER_EXE) && fs.existsSync(PIPER_MODEL);
+}
+
+function voiceProviderStatus() {
+  const requested = normalizeVoiceProvider(VOICE_PROVIDER);
+  const fallback = normalizeVoiceProvider(VOICE_PROVIDER_FALLBACK);
+  const piper_ready = piperAvailable();
+
+  let active = requested;
+
+  if (requested !== "piper" && fallback === "piper" && piper_ready) {
+    active = "piper";
+  }
+
+  if (requested === "piper" && !piper_ready) {
+    active = "unavailable";
+  }
+
+  return {
+    requested,
+    active,
+    fallback,
+    piper_ready,
+    premium_ready: false
+  };
+}
+
+async function synthesizeSpeech(text, voice = {}) {
+  const status = voiceProviderStatus();
+
+  if (status.active === "piper") {
+    const audio = await speakWithPiper(text, voice);
+
+    return {
+      audio,
+      provider: "piper",
+      requestedProvider: status.requested,
+      fallback: status.requested !== "piper",
+      contentType: "audio/wav"
+    };
+  }
+
+  if (status.requested === "openai" || status.requested === "elevenlabs") {
+    throw new Error(`Voice provider '${status.requested}' is selected, but the premium adapter is not enabled yet. Use VOICE_PROVIDER=piper for now.`);
+  }
+
+  throw new Error("No usable voice provider is available.");
+}
 function speakWithPiper(text, voice = {}) {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(PIPER_EXE)) {
@@ -881,7 +942,8 @@ const server = http.createServer(async (req, res) => {
       mode: "ollama",
       model: OLLAMA_MODEL,
       ollama_url: OLLAMA_URL,
-      voice: fs.existsSync(PIPER_EXE) && fs.existsSync(PIPER_MODEL) ? "piper" : "unavailable",
+      voice: voiceProviderStatus().active,
+    voice_provider: voiceProviderStatus(),
     });
     return;
   }
@@ -892,15 +954,16 @@ const server = http.createServer(async (req, res) => {
       const text = String(body.text || "").trim();
       const voice = body.voice || {};
 
-      const audio = await speakWithPiper(text, voice);
+      const speech = await synthesizeSpeech(text, voice);
 
       res.writeHead(200, {
-        ...corsHeaders,
-        "Content-Type": "audio/wav",
+        "Content-Type": speech.contentType,
+        "X-Lumina-Voice-Provider": speech.provider,
+        "X-Lumina-Voice-Requested-Provider": speech.requestedProvider,
+        "X-Lumina-Voice-Fallback": String(Boolean(speech.fallback)),
         "Cache-Control": "no-store",
       });
-
-      res.end(audio);
+      res.end(speech.audio);
     } catch (error) {
       sendJson(res, 502, {
         error: error.message,
