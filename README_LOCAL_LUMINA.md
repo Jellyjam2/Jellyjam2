@@ -43,3 +43,37 @@ Bad:
 Latency improved by 97%.
 Threat scan complete.
 Bandwidth optimized.
+
+## Premium voice activation
+
+Lumina uses local Piper voice by default. Premium voice is optional and must be enabled only from local environment settings.
+
+Do not commit real API keys. Do not paste API keys into chat.
+
+Safe default local voice settings:
+
+```text
+VOICE_PROVIDER=piper
+VOICE_PROVIDER_FALLBACK=piper
+VOICE_STYLE=natural_companion
+VOICE_EMOTION_AUTO=true
+```
+
+OpenAI premium voice activation, local only:
+
+```text
+VOICE_PROVIDER=openai
+VOICE_PROVIDER_FALLBACK=piper
+OPENAI_API_KEY=your_local_key_here
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=cedar
+OPENAI_TTS_FORMAT=wav
+OPENAI_TTS_SPEED=1
+```
+
+Safety behavior:
+
+- Without OPENAI_API_KEY, Lumina falls back to Piper.
+- With VOICE_PROVIDER=piper, Lumina stays fully local.
+- The live OpenAI voice test skips safely unless both OPENAI_API_KEY and VOICE_PROVIDER=openai are set.
+- Piper remains the safe fallback provider.
