@@ -872,6 +872,74 @@ function voiceProviderStatus() {
   };
 }
 
+
+function voiceDirectionToOpenAiInstructions(voice = {}) {
+  const emotion = voice.emotion || "warm";
+  const pace = voice.pace || "natural";
+  const energy = voice.energy || "medium";
+  const humor = voice.humor || "none";
+  const seriousness = voice.seriousness || "normal";
+
+  return [
+    "You are Lumina, Enrico's local AI companion.",
+    `Speak with ${emotion} emotion, ${pace} pacing, and ${energy} energy.`,
+    `Humor level: ${humor}. Seriousness: ${seriousness}.`,
+    "Sound natural, emotionally aware, and conversational.",
+    "Do not sound like a command terminal.",
+    "Keep delivery clear, warm, and grounded."
+  ].join(" ");
+}
+
+function audioContentType(format) {
+  const value = String(format || "wav").toLowerCase();
+
+  if (value === "mp3") return "audio/mpeg";
+  if (value === "opus") return "audio/opus";
+  if (value === "aac") return "audio/aac";
+  if (value === "flac") return "audio/flac";
+  if (value === "pcm") return "audio/L16";
+
+  return "audio/wav";
+}
+
+async function speakWithOpenAi(text, voice = {}) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured. Piper remains the safe local fallback.");
+  }
+
+  const safeText = prepareSpeechText(text).slice(0, 4096);
+
+  if (!safeText) {
+    throw new Error("No speech text was provided.");
+  }
+
+  const payload = {
+    model: OPENAI_TTS_MODEL,
+    input: safeText,
+    voice: OPENAI_TTS_VOICE,
+    response_format: OPENAI_TTS_FORMAT,
+    speed: OPENAI_TTS_SPEED,
+    instructions: voiceDirectionToOpenAiInstructions(voice)
+  };
+
+  const response = await fetch(OPENAI_TTS_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`OpenAI TTS failed with HTTP ${response.status}: ${errorText.slice(0, 500)}`);
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
 async function synthesizeSpeech(text, voice = {}) {
   const status = voiceProviderStatus();
 
