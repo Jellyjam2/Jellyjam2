@@ -757,6 +757,170 @@ health();
   setInterval(refreshHealthBadge, 10000);
 })();
 </script>
+
+<style id="lumina-cockpit-polish-v1">
+  :root {
+    --lumina-bg-0: #02050c;
+    --lumina-bg-1: #07111f;
+    --lumina-panel: rgba(7, 18, 32, 0.78);
+    --lumina-panel-strong: rgba(10, 26, 45, 0.92);
+    --lumina-line: rgba(105, 220, 255, 0.28);
+    --lumina-line-hot: rgba(110, 235, 255, 0.58);
+    --lumina-text: #e7fbff;
+    --lumina-muted: #8faab8;
+    --lumina-accent: #7cecff;
+    --lumina-accent-2: #b58cff;
+    --lumina-good: #8affcf;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--lumina-text);
+    background:
+      radial-gradient(circle at 15% 12%, rgba(82, 201, 255, 0.18), transparent 28%),
+      radial-gradient(circle at 82% 18%, rgba(181, 140, 255, 0.16), transparent 30%),
+      radial-gradient(circle at 50% 100%, rgba(0, 255, 194, 0.10), transparent 34%),
+      linear-gradient(135deg, var(--lumina-bg-0), var(--lumina-bg-1) 52%, #030713);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(rgba(124, 236, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124, 236, 255, 0.035) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(circle at center, black, transparent 76%);
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(124, 236, 255, 0.025) 45%,
+      transparent 46%,
+      transparent
+    );
+    background-size: 100% 7px;
+    opacity: 0.55;
+  }
+
+  main,
+  .app,
+  .container,
+  .cockpit,
+  .panel,
+  section,
+  form {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: 0.035em;
+    text-shadow: 0 0 18px rgba(124, 236, 255, 0.22);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    border: 1px solid var(--lumina-line);
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(124, 236, 255, 0.16), rgba(124, 236, 255, 0.05)),
+      rgba(8, 20, 34, 0.82);
+    color: var(--lumina-text);
+    box-shadow: 0 0 18px rgba(124, 236, 255, 0.08);
+    transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+    border-color: var(--lumina-line-hot);
+    box-shadow: 0 0 26px rgba(124, 236, 255, 0.18);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  input,
+  textarea {
+    border: 1px solid rgba(124, 236, 255, 0.22);
+    border-radius: 14px;
+    background: rgba(2, 7, 14, 0.72);
+    color: var(--lumina-text);
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.22);
+    outline: none;
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: var(--lumina-line-hot);
+    box-shadow:
+      0 0 0 3px rgba(124, 236, 255, 0.08),
+      inset 0 0 22px rgba(0, 0, 0, 0.22);
+  }
+
+  pre,
+  code {
+    border-radius: 12px;
+    background: rgba(1, 8, 16, 0.72);
+    color: #bff6ff;
+  }
+
+  #lumina-voice-badge {
+    border-color: rgba(124, 236, 255, 0.46);
+    background:
+      linear-gradient(180deg, rgba(9, 26, 45, 0.92), rgba(3, 9, 18, 0.88));
+    box-shadow:
+      0 0 30px rgba(124, 236, 255, 0.20),
+      inset 0 0 18px rgba(124, 236, 255, 0.05);
+  }
+
+  #lumina-voice-badge .lvb-title::before {
+    content: "●";
+    color: var(--lumina-good);
+    margin-right: 7px;
+    text-shadow: 0 0 10px var(--lumina-good);
+  }
+
+  #lumina-cockpit-polish-mark {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 9998;
+    padding: 9px 12px;
+    border: 1px solid rgba(124, 236, 255, 0.24);
+    border-radius: 999px;
+    background: rgba(4, 12, 22, 0.72);
+    color: var(--lumina-muted);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(12px);
+  }
+</style>
+
+<div id="lumina-cockpit-polish-mark">Lumina Cockpit · Local Mode</div>
 </body>
 </html>`;
 
@@ -1282,5 +1446,6 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log("[LUMINA AI] Ollama URL: " + OLLAMA_URL);
   console.log("[LUMINA AI] Ollama model: " + OLLAMA_MODEL);
 });
+
 
 
