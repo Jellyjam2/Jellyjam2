@@ -19,8 +19,11 @@ const VOICE_STYLE = process.env.VOICE_STYLE || "natural_companion";
 const VOICE_EMOTION_AUTO = String(process.env.VOICE_EMOTION_AUTO || "true").toLowerCase() !== "false";
 const VOICE_PROVIDER_FALLBACK = process.env.VOICE_PROVIDER_FALLBACK || "piper";
 
-const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || "";
-const OPENAI_TTS_VOICE = process.env.OPENAI_TTS_VOICE || "";
+const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts";
+const OPENAI_TTS_VOICE = process.env.OPENAI_TTS_VOICE || "cedar";
+const OPENAI_TTS_FORMAT = process.env.OPENAI_TTS_FORMAT || "wav";
+const OPENAI_TTS_SPEED = Number(process.env.OPENAI_TTS_SPEED || "1");
+const OPENAI_TTS_URL = process.env.OPENAI_TTS_URL || "https://api.openai.com/v1/audio/speech";
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || "";
 const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "";
 
@@ -825,11 +828,14 @@ function piperAvailable() {
 function premiumVoiceProviderStatus() {
   return {
     openai: {
-      adapter: "stub",
-      enabled: false,
+      adapter: "openai_tts",
+      enabled: Boolean(process.env.OPENAI_API_KEY),
       configured: Boolean(process.env.OPENAI_API_KEY),
-      model: OPENAI_TTS_MODEL || "not_configured",
-      voice: OPENAI_TTS_VOICE || "not_configured"
+      model: OPENAI_TTS_MODEL,
+      voice: OPENAI_TTS_VOICE,
+      response_format: OPENAI_TTS_FORMAT,
+      speed: OPENAI_TTS_SPEED,
+      url: OPENAI_TTS_URL
     },
     elevenlabs: {
       adapter: "stub",
