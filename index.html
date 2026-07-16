@@ -142,7 +142,7 @@
                 }
 
                 const data = await response.json();
-                return data.reply || null;
+                return { reply: data.reply || null, mode: data.mode || "ai", model: data.model || "" };
             } catch (error) {
                 console.warn("Lumina AI core unavailable. Using local fallback:", error);
                 return null;
@@ -196,14 +196,19 @@
 
             status.innerText = ">> LUMINA NEURAL CORE: THINKING...";
 
-            let response = await askLuminaBrain(rawInput);
+            let brain = await askLuminaBrain(rawInput);
+            let response = brain ? brain.reply : null;
 
             if (!response) {
                 status.innerText = ">> LOCAL LOGIC FALLBACK: ACTIVE";
                 response = localLuminaFallback(rawInput.toLowerCase());
             }
 
-            console.log("LUMINA SAYS:", response);
+            if (brain && brain.mode) {
+                status.innerText = `>> ${brain.mode.toUpperCase()} LOCAL CORE: RESPONSE READY`;
+            }
+
+            console.log(`LUMINA [${brain && brain.mode ? brain.mode : "fallback"}]:`, response);
 
             const shortStatus = response.length > 90 ? response.slice(0, 90) + "..." : response;
             status.innerText = ">> " + shortStatus.toUpperCase();
