@@ -1,16 +1,38 @@
 import http from "node:http";
 
-const PORT = 8788;
-const API_KEY = process.env.OPENAI_API_KEY;
-const MODEL = process.env.OPENAI_MODEL || "gpt-5.6";
+const PORT = Number(process.env.LUMINA_AI_PORT || 8788);
+const OLLAMA_URL = String(process.env.OLLAMA_URL || "http://127.0.0.1:11434").replace(/\/+$/, "");
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2:3b";
 
 const memory = [];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Private-Network": "true",
 };
+
+const luminaInstructions = `
+You are Lumina, Enrico's local sovereign cockpit assistant.
+
+Personality:
+- cinematic, calm, intelligent, cool, sharp, protective
+- speak like a premium system core, not a generic chatbot
+- concise by default: one to three sentences
+- address the user as Enrico sometimes, not every line
+- do not repeat the same response pattern
+- never pretend you executed real system actions
+- do not claim access to files, hardware, private repos, sensors, or secrets unless provided
+- for technical requests, give exact practical commands
+- for cockpit commands, respond with style, confidence, and clarity
+
+System identity:
+- name: Lumina
+- role: local-first AI cockpit interface
+- mode: localhost Ollama AI core
+- mission: assist with systems design, engineering workflow, security planning, command interpretation, and project navigation
+`;
 
 function sendJson(res, status, payload) {
   res.writeHead(status, {
@@ -36,49 +58,68 @@ function readBody(req) {
   });
 }
 
-function extractText(data) {
-  if (typeof data.output_text === "string" && data.output_text.trim()) {
-    return data.output_text.trim();
-  }
-
-  const parts = [];
-
-  for (const item of data.output || []) {
-    for (const content of item.content || []) {
-      if (typeof content.text === "string") {
-        parts.push(content.text);
-      }
-    }
-  }
-
-  return parts.join(" ").trim();
+function cleanReply(text) {
+  return String(text || "")
+    .replace(/^LUMINA:\s*/i, "")
+    .replace(/^ASSISTANT:\s*/i, "")
+    .trim();
 }
 
-const luminaInstructions = `
-You are Lumina, Enrico's local sovereign cockpit assistant.
+async function askOllama(text) {
+  const recentContext = memory
+    .slice(-8)
+    .map(item => `${item.role.toUpperCase()}: ${item.content}`)
+    .join("\n");
 
-Personality:
-- cinematic, calm, intelligent, cool, sharp, protective
-- sounds like a premium system core, not a chatbot
-- concise by default: 1 to 3 sentences
-- address the user as Enrico sometimes, not every line
-- never pretend you executed real system actions unless the user only asked for a concept
-- do not claim access to files, hardware, private repos, sensors, or secrets unless explicitly provided in the current message
-- for coding or terminal requests, give exact practical commands
-- for casual commands, respond with style and confidence
+  const prompt = `${luminaInstructions}
 
-System identity:
-- name: Lumina
-- role: local-first AI cockpit interface
-- public mode: GitHub Pages interface
-- private brain: optional localhost AI core
-- mission: assist with systems design, engineering workflow, security-focused planning, and command interpretation
+Recent cockpit context:
+${recentContext || "No prior context."}
 
-Output style:
-- no markdown unless useful
-- no long essays
-- make it feel alive, controlled, and premium
-`;
+User command:
+${text}
+
+Lumina response:`;
+
+  const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      prompt,
+      stream: false,
+      options: {
+        temperature: 0.85,
+        top_p: 0.9,
+        repeat_penalty: 1.12,
+        num_predict: 160,
+      },
+    }),
+  });
+
+  const raw = await response.text();
+
+  let data = {};
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`Ollama returned non-JSON response: ${raw.slice(0, 200)}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || raw || `Ollama HTTP ${response.status}`);
+  }
+
+  const reply = cleanReply(data.response);
+
+  if (!reply) {
+    throw new Error("Ollama returned no response text");
+  }
+
+  return reply;
+}
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
@@ -87,13 +128,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method !== "POST" || req.url !== "/think") {
-    sendJson(res, 404, { error: "Not found" });
+  if (req.method === "GET" && req.url === "/health") {
+    sendJson(res, 200, {
+      status: "online",
+      mode: "ollama",
+      model: OLLAMA_MODEL,
+      ollama_url: OLLAMA_URL,
+    });
     return;
   }
 
-  if (!API_KEY) {
-    sendJson(res, 500, { error: "OPENAI_API_KEY is not set" });
+  if (req.method !== "POST" || req.url !== "/think") {
+    sendJson(res, 404, { error: "Not found" });
     return;
   }
 
@@ -106,44 +152,32 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    const reply = await askOllama(text);
+
     memory.push({ role: "user", content: text });
-    while (memory.length > 10) memory.shift();
+    memory.push({ role: "assistant", content: reply });
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        instructions: luminaInstructions,
-        input: memory,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      sendJson(res, response.status, {
-        error: data.error?.message || JSON.stringify(data),
-      });
-      return;
+    while (memory.length > 12) {
+      memory.shift();
     }
 
-    const reply = extractText(data) || "Neural core returned silence. Local logic remains online.";
-
-    memory.push({ role: "assistant", content: reply });
-    while (memory.length > 10) memory.shift();
-
-    sendJson(res, 200, { reply });
+    sendJson(res, 200, {
+      reply,
+      mode: "ollama",
+      model: OLLAMA_MODEL,
+    });
   } catch (error) {
-    sendJson(res, 500, { error: error.message });
+    sendJson(res, 502, {
+      error: error.message,
+      mode: "ollama",
+      model: OLLAMA_MODEL,
+    });
   }
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`[LUMINA AI] Neural core online: http://127.0.0.1:${PORT}`);
-  console.log(`[LUMINA AI] Model: ${MODEL}`);
-  console.log("[LUMINA AI] API key is read from environment only. Do not commit secrets.");
+  console.log(`[LUMINA AI] Local Ollama core online: http://127.0.0.1:${PORT}`);
+  console.log(`[LUMINA AI] Mode: ollama`);
+  console.log(`[LUMINA AI] Ollama URL: ${OLLAMA_URL}`);
+  console.log(`[LUMINA AI] Ollama model: ${OLLAMA_MODEL}`);
 });
