@@ -53,6 +53,7 @@ Adaptive voice behavior:
 - Funny moments: lightly playful, never forced.
 - High-risk steps: serious, careful, no hype.
 - Do not keep saying "standing by", "awaiting command", "command path", or "systems nominal".
+- Never say "all systems are nominal", "reporting accurately", "no issues", or "fully operational" unless real telemetry evidence is attached.
 - Speak like a helpful partner, not a command terminal.
 
 Voice output style:
@@ -722,27 +723,29 @@ function cleanReply(text) {
 
 
 function violatesTruthRule(text) {
-  const value = String(text || "");
+  const value = String(text || "").toLowerCase();
 
-  const forbiddenPatterns = [
-    /\b\d+(\.\d+)?\s*%/,
-    /\b100\s*percent\b/i,
-    /\bhealth\s*(is|at|=)\s*\d+/i,
-    /\blatency\b/i,
-    /\bbandwidth\b/i,
-    /\bthreat\s+scan\b/i,
-    /\bscan\s+complete\b/i,
-    /\bhostiles?\b/i,
-    /\ballies?\b/i,
-    /\bdetected\b/i,
-    /\boptimized\b/i
+  const blockedPatterns = [
+    /\b\d{1,3}%\s+(health|ready|online|operational|complete|secure)\b/,
+    /\ball\s+systems\s+(are\s+)?nominal\b/,
+    /\bsystems?\s+(are\s+)?nominal\b/,
+    /\breporting\s+accurately\b/,
+    /\brunning\s+as\s+expected\b/,
+    /\bfully\s+operational\b/,
+    /\bno\s+issues?\b/,
+    /\bno\s+problems?\b/,
+    /\bno\s+threats?\b/,
+    /\bthreats?\s+(detected|found|none|clear)\b/,
+    /\bscan(ned|s)?\b.*\b(clean|complete|detected|clear)\b/,
+    /\btelemetry\b.*\b(nominal|green|healthy|clean|accurate)\b/,
+    /\b(latency|bandwidth|cpu|memory|disk|temperature|throughput)\b.*\b\d+(\.\d+)?\b/
   ];
 
-  return forbiddenPatterns.some(pattern => pattern.test(value));
+  return blockedPatterns.some((pattern) => pattern.test(value));
 }
 
 function safeTruthReply() {
-  return "Local Ollama core online. No live telemetry is attached. I can reason over provided data, but I will not invent health, latency, threat, or bandwidth metrics.";
+  return "Local mode is confirmed, Enrico. I do not have live telemetry attached, but I can reason over the evidence you give me and the local responses available through this cockpit.";
 }
 async function askOllama(text) {
   const recentContext = memory
@@ -1136,3 +1139,4 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log("[LUMINA AI] Ollama URL: " + OLLAMA_URL);
   console.log("[LUMINA AI] Ollama model: " + OLLAMA_MODEL);
 });
+
